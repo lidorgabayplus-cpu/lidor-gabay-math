@@ -831,6 +831,242 @@ footer{
   .scale-row{flex-wrap:wrap}
   .sc-btn{flex:0 0 calc(20% - 5px)}
 }
+
+/* ─── WHATSAPP FLOAT ─── */
+.wa-float{
+  position:fixed;bottom:32px;left:32px;z-index:500;
+  display:flex;align-items:center;gap:12px;
+}
+.wa-btn{
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,#25D366,#128C7E);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 24px rgba(37,211,102,.45);
+  text-decoration:none;
+  transition:transform .3s,box-shadow .3s;
+  animation:wa-pulse 3s ease infinite;
+}
+@keyframes wa-pulse{
+  0%,100%{box-shadow:0 6px 24px rgba(37,211,102,.45)}
+  50%{box-shadow:0 6px 32px rgba(37,211,102,.7),0 0 0 12px rgba(37,211,102,.1)}
+}
+.wa-btn:hover{transform:scale(1.1);box-shadow:0 10px 32px rgba(37,211,102,.6)}
+.wa-btn svg{width:30px;height:30px;fill:#fff}
+.wa-tooltip{
+  background:rgba(10,20,40,.92);
+  backdrop-filter:blur(12px);
+  color:#fff;
+  font-family:'Rubik',sans-serif;
+  font-size:.85rem;font-weight:600;
+  padding:10px 16px;border-radius:12px;
+  white-space:nowrap;
+  opacity:0;transform:translateX(-8px);
+  transition:opacity .3s,transform .3s;
+  pointer-events:none;
+  border:1px solid rgba(37,211,102,.25);
+}
+.wa-float:hover .wa-tooltip{opacity:1;transform:translateX(0)}
+
+/* ─── URGENCY BANNER ─── */
+.urgency-banner{
+  background:var(--dark);
+  padding:28px 56px;
+  display:flex;align-items:center;justify-content:center;
+  gap:32px;flex-wrap:wrap;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.urgency-item{
+  display:flex;align-items:center;gap:12px;
+}
+.urgency-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#ff4d4d;
+  box-shadow:0 0 0 0 rgba(255,77,77,.5);
+  animation:live-pulse 1.5s ease infinite;
+}
+@keyframes live-pulse{
+  0%{box-shadow:0 0 0 0 rgba(255,77,77,.5)}
+  70%{box-shadow:0 0 0 8px rgba(255,77,77,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,77,77,0)}
+}
+.urgency-text{
+  font-family:'Rubik',sans-serif;
+  font-size:.9rem;font-weight:600;
+  color:rgba(255,255,255,.9);
+}
+.urgency-text strong{
+  color:var(--lime);font-size:1.1rem;font-weight:800;
+}
+.urgency-sep{
+  width:1px;height:24px;
+  background:rgba(255,255,255,.12);
+}
+
+/* ─── RESULTS SECTION ─── */
+#results{
+  padding:96px 56px;
+  background:linear-gradient(180deg,var(--bg) 0%,#fff 100%);
+  position:relative;overflow:hidden;
+}
+#results::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(58,91,240,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.results-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:24px;
+  margin-top:56px;
+}
+.result-card{
+  background:var(--white);
+  border-radius:24px;
+  padding:36px 32px;
+  border:1.5px solid var(--border);
+  position:relative;overflow:hidden;
+  transition:transform .3s,box-shadow .3s;
+}
+.result-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 48px rgba(58,91,240,.12);
+}
+.result-card::before{
+  content:'';
+  position:absolute;top:0;right:0;
+  width:80px;height:80px;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  opacity:.07;
+  border-radius:0 24px 0 80px;
+}
+.result-before-after{
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:20px;
+}
+.result-grade{
+  display:flex;flex-direction:column;align-items:center;
+}
+.grade-label{font-size:.7rem;font-weight:700;color:var(--light);margin-bottom:4px;letter-spacing:.05em}
+.grade-val{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:2.2rem;font-weight:700;
+  line-height:1;
+}
+.grade-before .grade-val{color:var(--mid)}
+.grade-after .grade-val{
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.result-arrow{
+  font-size:1.4rem;color:var(--blue);flex:1;text-align:center;
+}
+.result-delta{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(193,255,0,.12);
+  color:#5a8000;
+  border:1px solid rgba(193,255,0,.3);
+  padding:5px 12px;border-radius:99px;
+  font-size:.8rem;font-weight:700;
+  margin-bottom:14px;
+}
+.result-name{
+  font-size:1rem;font-weight:700;color:var(--text);
+  margin-bottom:6px;
+}
+.result-desc{
+  font-size:.85rem;color:var(--light);line-height:1.5;
+}
+.results-stat-row{
+  display:flex;
+  gap:32px;
+  justify-content:center;
+  margin-top:64px;
+  flex-wrap:wrap;
+}
+.stat-pill{
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  padding:28px 40px;
+  min-width:140px;
+  box-shadow:0 4px 20px rgba(58,91,240,.06);
+}
+.stat-pill-num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:2.4rem;font-weight:700;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;
+}
+.stat-pill-label{
+  font-size:.78rem;color:var(--light);font-weight:600;
+  margin-top:6px;text-align:center;
+}
+
+/* ─── FAQ ─── */
+#faq{
+  padding:96px 56px;
+  background:var(--dark);
+  position:relative;overflow:hidden;
+}
+#faq::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 40% 40% at 80% 20%,rgba(58,91,240,.15) 0%,transparent 60%),
+    radial-gradient(ellipse 30% 30% at 20% 80%,rgba(0,212,232,.1) 0%,transparent 60%);
+  pointer-events:none;
+}
+.faq-grid{
+  max-width:760px;margin:56px auto 0;
+  display:flex;flex-direction:column;gap:12px;
+}
+.faq-item{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  overflow:hidden;
+  transition:border-color .3s;
+}
+.faq-item.open{
+  border-color:rgba(58,91,240,.4);
+}
+.faq-q{
+  width:100%;background:none;border:none;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 26px;
+  font-family:'Rubik',sans-serif;
+  font-size:1rem;font-weight:600;
+  color:rgba(255,255,255,.9);
+  cursor:pointer;text-align:right;
+  gap:16px;
+}
+.faq-q:hover{color:#fff}
+.faq-icon{
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(58,91,240,.2);
+  border:1px solid rgba(58,91,240,.3);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:transform .3s,background .3s;
+  font-size:.85rem;color:var(--cyan);
+}
+.faq-item.open .faq-icon{
+  transform:rotate(45deg);
+  background:rgba(58,91,240,.4);
+}
+.faq-a{
+  max-height:0;overflow:hidden;
+  transition:max-height .4s ease,padding .4s ease;
+  padding:0 26px;
+  font-size:.9rem;color:rgba(255,255,255,.55);
+  line-height:1.75;
+}
+.faq-item.open .faq-a{
+  max-height:300px;
+  padding:0 26px 22px;
+}
 </style>
 </head>
 <body>
@@ -1229,6 +1465,122 @@ document.getElementById('tmLightbox').addEventListener('click', e => {
 </script>
 
 <!-- PLANS -->
+
+<!-- RESULTS / BEFORE-AFTER SECTION -->
+<section id="results">
+  <div class="container">
+    <span class="s-tag">תוצאות אמיתיות</span>
+    <h2 class="s-h2">מספרים שמדברים.<br><span class="grad">לא הבטחות.</span></h2>
+    <p class="s-lead">מבחינתי תוצאות הן הכל. כמה דוגמאות מ-5 שנות ניסיון בהוראה:</p>
+
+    <div class="results-grid">
+      <div class="result-card reveal">
+        <div class="result-before-after">
+          <div class="result-grade grade-before">
+            <span class="grade-label">לפני</span>
+            <span class="grade-val">52</span>
+          </div>
+          <div class="result-arrow">→</div>
+          <div class="result-grade grade-after">
+            <span class="grade-label">אחרי</span>
+            <span class="grade-val">88</span>
+          </div>
+        </div>
+        <div class="result-delta">▲ +36 נקודות</div>
+        <div class="result-name">תלמיד כיתה י׳, בגרות 3 יח׳</div>
+        <div class="result-desc">התחיל מאפס בחשבון, סיים עם ציון גבוה במסלול 3 יחידות תוך 8 חודשים.</div>
+      </div>
+
+      <div class="result-card reveal">
+        <div class="result-before-after">
+          <div class="result-grade grade-before">
+            <span class="grade-label">לפני</span>
+            <span class="grade-val">61</span>
+          </div>
+          <div class="result-arrow">→</div>
+          <div class="result-grade grade-after">
+            <span class="grade-label">אחרי</span>
+            <span class="grade-val">92</span>
+          </div>
+        </div>
+        <div class="result-delta">▲ +31 נקודות</div>
+        <div class="result-name">תלמידה כיתה י״ב, בגרות 4 יח׳</div>
+        <div class="result-desc">הכנה לבגרות של שנה וחצי — סיימה בהצלחה ועכשיו לומדת הנדסה.</div>
+      </div>
+
+      <div class="result-card reveal">
+        <div class="result-before-after">
+          <div class="result-grade grade-before">
+            <span class="grade-label">לפני</span>
+            <span class="grade-val">45</span>
+          </div>
+          <div class="result-arrow">→</div>
+          <div class="result-grade grade-after">
+            <span class="grade-label">אחרי</span>
+            <span class="grade-val">79</span>
+          </div>
+        </div>
+        <div class="result-delta">▲ +34 נקודות</div>
+        <div class="result-name">תלמיד כיתה ח׳, מבחן בי״ס</div>
+        <div class="result-desc">נכשל פעמיים — אחרי 3 חודשי עבודה שיטתית עבר בעליון.</div>
+      </div>
+
+      <div class="result-card reveal">
+        <div class="result-before-after">
+          <div class="result-grade grade-before">
+            <span class="grade-label">לפני</span>
+            <span class="grade-val">58</span>
+          </div>
+          <div class="result-arrow">→</div>
+          <div class="result-grade grade-after">
+            <span class="grade-label">אחרי</span>
+            <span class="grade-val">95</span>
+          </div>
+        </div>
+        <div class="result-delta">▲ +37 נקודות</div>
+        <div class="result-name">תלמידה כיתה י״א, מגמה מדעית</div>
+        <div class="result-desc">עברה ממסלול 3 ל-5 יחידות — עכשיו אחת המצטיינות בכיתה.</div>
+      </div>
+    </div>
+
+    <div class="results-stat-row">
+      <div class="stat-pill reveal">
+        <span class="stat-pill-num" data-target="28">0</span>
+        <span class="stat-pill-label">ממוצע שיפור<br>בנקודות</span>
+      </div>
+      <div class="stat-pill reveal">
+        <span class="stat-pill-num" data-target="94">0</span>
+        <span class="stat-pill-label">% מהתלמידים<br>עברו את הבגרות</span>
+      </div>
+      <div class="stat-pill reveal">
+        <span class="stat-pill-num" data-target="150">0</span>
+        <span class="stat-pill-label">+ תלמידים<br>עד כה</span>
+      </div>
+      <div class="stat-pill reveal">
+        <span class="stat-pill-num" data-target="5">0</span>
+        <span class="stat-pill-label">שנות ניסיון<br>בהוראה</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- URGENCY SPOTS BANNER -->
+<div class="urgency-banner">
+  <div class="urgency-item">
+    <div class="urgency-dot"></div>
+    <span class="urgency-text">נותרו <strong id="spotsLeft">6</strong> מקומות פנויים בקבוצות הראשונות</span>
+  </div>
+  <div class="urgency-sep"></div>
+  <div class="urgency-item">
+    <span class="urgency-text">🔥 <strong>3</strong> הורים שאלו עלינו היום</span>
+  </div>
+  <div class="urgency-sep"></div>
+  <div class="urgency-item">
+    <span class="urgency-text">📅 פתיחה מתוכננת: <strong>ספטמבר 2025</strong></span>
+  </div>
+</div>
+
 <section id="plans">
   <div class="plans-glow"></div>
   <div class="container">
@@ -1280,6 +1632,75 @@ document.getElementById('tmLightbox').addEventListener('click', e => {
 </section>
 
 <!-- SURVEY -->
+
+<!-- FAQ SECTION -->
+<section id="faq">
+  <div class="container">
+    <span class="s-tag" style="color:rgba(255,255,255,.4)">שאלות נפוצות</span>
+    <h2 class="s-h2" style="color:#fff">יש לכם שאלות?<br><span style="background:linear-gradient(90deg,var(--cyan),var(--lime));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">כנראה כבר עניתי.</span></h2>
+
+    <div class="faq-grid">
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>האם המרכז מתאים לילד שמתקשה מאוד?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">בהחלט. רוב התלמידים שלי הגיעו עם פערים גדולים ופחד ממתמטיקה. הגישה שלי מתחילה מהבסיס — מחפשים איפה הבלבול התחיל ובונים משם. אין בושה, אין לחץ, יש דרך.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>כמה תלמידים יהיו בכל קבוצה?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">מקסימום 6 תלמידים בקבוצה — זה קריטי. הניסיון שלי מראה שקבוצה קטנה זה ה"מתוק" בין שיעור פרטי לכיתה: יש תשומת לב אישית אבל גם דינמיקה קבוצתית חיובית שמניעה תלמידים קדימה.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>מה קורה אם התלמיד נעדר ממפגש?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">תלמיד שנעדר מסיבה מוצדקת יקבל תיאום של שיעור השלמה. אנחנו מבינים שלחיים יש הפתעות — הגמישות היא חלק מהשירות.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>לאיזה כיתות המרכז מתאים?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">כיתות ז׳ עד י״ב — חטיבת הביניים ועד סיום הבגרות. עובדים גם עם תלמידים שרוצים להשתדרג ממסלול 3 ל-4 יחידות, או מ-4 ל-5. כל רמה ויעד יש לנו פתרון.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>האם יש אפשרות לנסות לפני הרשמה?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">כן — אחרי מילוי הסקר נקבע שיחת היכרות קצרה (חינם) ובה נבין אם יש מקום בקבוצה מתאימה. לא מבקשים מחויבות עיוורת.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>איפה יתקיימו המפגשים?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">בקרית שמונה — המיקום המדויק יוודא לפני הפתיחה. האופציה של מפגשים מקוונים (זום) גם נשקלת לפי הביקוש מאזור הצפון הרחב יותר.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span>מה כולל המנוי?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">המנוי כולל את מספר המפגשים השבועיים שבחרתם, חומרי תרגול, מעקב התקדמות שוטף ושיחת עדכון לפחות פעם בחודש עם ההורים. במסלול שיפור ואינטנסיב גם דוח חודשי כתוב.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <section id="survey">
   <div class="container">
     <span class="s-tag">בדיקת שוק</span>
@@ -1671,5 +2092,25 @@ document.querySelectorAll('.why-card').forEach(card=>{
     ייצא CSV לגיבוי קבוע.
   </p>
 </div>
+
+<!-- WHATSAPP FLOAT -->
+<div class="wa-float">
+  <div class="wa-tooltip">כתבו לי בוואטסאפ 💬</div>
+  <a class="wa-btn" href="https://wa.me/972544864131?text=%D7%94%D7%99%D7%99%20%D7%9C%D7%99%D7%93%D7%95%D7%A8%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%90%D7%AA%20%D7%94%D7%90%D7%AA%D7%A8%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%95%D7%93" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    </svg>
+  </a>
+</div>
+
+<script>
+// FAQ Toggle
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
 </body>
 </html>
