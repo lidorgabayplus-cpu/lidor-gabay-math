@@ -1882,6 +1882,25 @@ const co=new IntersectionObserver(entries=>{
 },{threshold:.5})
 document.querySelectorAll('.bento-num[data-count]').forEach(el=>co.observe(el))
 
+// ── Stat-pill counter (data-target) ───────────────────────────────
+const po=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&!e.target.dataset.done){
+      e.target.dataset.done='1'
+      const target=+e.target.dataset.target
+      const suffix=e.target.dataset.suffix||''
+      let cur=0,dur=1200,frames=60,step=target/frames
+      const t=setInterval(()=>{
+        cur=Math.min(cur+step,target)
+        const rounded=Math.round(cur)
+        e.target.textContent=rounded+(rounded>=target&&target>=100?'+':'')+suffix
+        if(cur>=target)clearInterval(t)
+      },dur/frames)
+    }
+  })
+},{threshold:.4})
+document.querySelectorAll('.stat-pill-num[data-target]').forEach(el=>po.observe(el))
+
 // ── Opt highlight ─────────────────────────────────────────────────
 document.querySelectorAll('.opt input').forEach(inp=>{
   inp.addEventListener('change',()=>{
