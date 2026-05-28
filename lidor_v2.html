@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>לידור גבאי | מרכז מתמטיקה</title>
+<!-- PHOTO SETUP: שמור את תמונתך בשם lidor.png באותה תיקייה כמו קובץ זה -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --blue:    #3A5BF0;
+  --blue2:   #6B8EFF;
+  --cyan:    #00D4E8;
+  --lime:    #C1FF00;
+  --lime2:   #DEFF7A;
+  --dark:    #06091E;
+  --dark2:   #0D1340;
+  --text:    #12172E;
+  --mid:     #4A5178;
+  --light:   #8890B5;
+  --bg:      #F4F6FF;
+  --white:   #FFFFFF;
+  --border:  rgba(58,91,240,0.12);
+  --glass:   rgba(255,255,255,0.7);
+  --glass-b: rgba(255,255,255,0.15);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:3px}
+
+body{
+  font-family:'Rubik',sans-serif;
+  background:var(--white);
+  color:var(--text);
+  overflow-x:hidden;
+}
+
+/* ─── GRAIN OVERLAY ─── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:999;opacity:.4;
+}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;right:0;left:0;z-index:100;
+  padding:16px 56px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:all .4s ease;
+}
+nav.solid{
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 4px 24px rgba(58,91,240,0.06);
+}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:1.1rem;color:var(--text);
+  text-decoration:none;
+}
+.nav-logo-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  animation:pulse-dot 2s ease infinite;
+}
+@keyframes pulse-dot{
+  0%,100%{box-shadow:0 0 0 0 rgba(58,91,240,0.4)}
+  50%{box-shadow:0 0 0 6px rgba(58,91,240,0)}
+}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-link{
+  font-size:.88rem;font-weight:500;color:var(--mid);
+  text-decoration:none;
+  transition:color .2s;
+}
+.nav-link:hover{color:var(--blue)}
+.nav-btn{
+  background:var(--blue);color:#fff;
+  font-family:'Rubik',sans-serif;font-weight:700;font-size:.88rem;
+  padding:10px 22px;border-radius:100px;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(58,91,240,0.35);
+}
+.nav-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(58,91,240,0.45)}
+
+/* ─── HERO ─── */
+#hero{
+  min-height:100vh;
+  background:var(--dark);
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;
+  padding:120px 56px 80px;
+}
+
+/* Aurora blobs */
+.aurora{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.blob{
+  position:absolute;border-radius:50%;
+  filter:blur(80px);opacity:.6;
+  animation:blob-float ease-in-out infinite alternate;
+}
+.blob1{
+  width:600px;height:600px;
+  background:radial-gradient(circle, #3A5BF0 0%, transparent 70%);
+  top:-100px;right:-100px;
+  animation-duration:8s;
+}
+.blob2{
+  width:500px;height:500px;
+  background:radial-gradient(circle, #00D4E8 0%, transparent 70%);
+  bottom:-50px;left:10%;opacity:.4;
+  animation-duration:11s;animation-delay:-3s;
+}
+.blob3{
+  width:300px;height:300px;
+  background:radial-gradient(circle, #C1FF00 0%, transparent 70%);
+  top:40%;left:30%;opacity:.2;
+  animation-duration:9s;animation-delay:-5s;
+}
+@keyframes blob-float{
+  from{transform:translate(0,0) scale(1)}
+  to{transform:translate(40px,30px) scale(1.08)}
+}
+
+/* Grid dot pattern */
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+}
+
+.hero-inner{
+  position:relative;z-index:2;
+  display:grid;
+  grid-template-columns:1fr 480px;
+  gap:64px;
+  align-items:center;
+  max-width:1200px;
+  width:100%;
+}
+
+/* Left */
+.hero-left{}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(193,255,0,0.1);
+  border:1px solid rgba(193,255,0,0.25);
+  color:var(--lime);
+  font-size:.78rem;font-weight:700;letter-spacing:.1em;
+  padding:6px 16px;border-radius:100px;
+  margin-bottom:28px;
+  animation:fade-up .7s ease both;
+}
+.hero-eyebrow::before{content:'★';margin-left:4px}
+
+.hero-h1{
+  font-size:clamp(2.6rem,5.5vw,5rem);
+  font-weight:900;color:#fff;
+  line-height:1.1;
+  margin-bottom:24px;
+  animation:fade-up .7s ease .1s both;
+}
+.grad-text{
+  background:linear-gradient(90deg,var(--cyan),var(--lime));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-p{
+  font-size:1.05rem;color:rgba(255,255,255,.6);
+  line-height:1.75;max-width:500px;
+  margin-bottom:40px;
+  animation:fade-up .7s ease .2s both;
+}
+.hero-btns{
+  display:flex;gap:14px;flex-wrap:wrap;
+  animation:fade-up .7s ease .3s both;
+}
+.btn-glow{
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  color:#fff;font-weight:700;font-size:1rem;
+  padding:16px 32px;border-radius:100px;
+  text-decoration:none;
+  box-shadow:0 0 0 0 rgba(58,91,240,0.5);
+  transition:transform .2s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.btn-glow::before{
+  content:'';position:absolute;inset:-2px;
+  background:linear-gradient(135deg,var(--blue),var(--cyan),var(--lime));
+  border-radius:100px;z-index:-1;
+  opacity:0;transition:opacity .3s;
+}
+.btn-glow:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(58,91,240,.5)}
+.btn-glow:hover::before{opacity:1}
+.btn-ghost{
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(255,255,255,.2);
+  color:#fff;font-weight:600;font-size:.95rem;
+  padding:16px 28px;border-radius:100px;
+  text-decoration:none;
+  transition:border-color .2s,background .2s;
+  backdrop-filter:blur(8px);
+}
+.btn-ghost:hover{border-color:var(--cyan);background:rgba(0,212,232,.08);color:var(--cyan)}
+
+/* Hero badges strip */
+.hero-badges{
+  display:flex;gap:12px;margin-top:36px;flex-wrap:wrap;
+  animation:fade-up .7s ease .4s both;
+}
+.hbadge{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  backdrop-filter:blur(6px);
+  color:rgba(255,255,255,.75);
+  font-size:.78rem;font-weight:600;
+  padding:7px 14px;border-radius:100px;
+}
+.hbadge span{font-size:.9rem}
+
+@keyframes fade-up{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
+}
+
+/* Right — Photo card */
+.hero-right{
+  position:relative;
+  animation:fade-up .7s ease .35s both;
+}
+.photo-card{
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#131A4A,#0D1340);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 32px 80px rgba(0,0,20,.6),0 0 0 1px rgba(58,91,240,.2);
+  aspect-ratio:.8/1;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+/* Glow halo behind photo */
+.photo-card::before{
+  content:'';
+  position:absolute;
+  bottom:0;left:50%;transform:translateX(-50%);
+  width:70%;height:60%;
+  background:radial-gradient(ellipse, rgba(58,91,240,.5) 0%, transparent 70%);
+  pointer-events:none;
+}
+.photo-card img{
+  width:100%;height:100%;
+  object-fit:cover;object-position:top center;
+  mix-blend-mode:lighten;
+  position:absolute;inset:0;
+}
+/* Fallback placeholder */
+.photo-placeholder{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;color:rgba(255,255,255,.3);font-size:.85rem;
+}
+.photo-placeholder .pl-icon{
+  font-size:4rem;opacity:.2;
+}
+
+/* floating chips on photo */
+.photo-chip{
+  position:absolute;
+  background:rgba(255,255,255,.9);
+  backdrop-filter:blur(10px);
+  border-radius:12px;
+  padding:10px 16px;
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+  display:flex;align-items:center;gap:8px;
+  font-size:.82rem;font-weight:700;color:var(--text);
+  white-space:nowrap;
+  animation:chip-float ease-in-out infinite alternate;
+}
+@keyframes chip-float{
+  from{transform:translateY(0)}
+  to{transform:translateY(-8px)}
+}
+.chip-left{
+  left:-20px;top:28%;
+  animation-duration:4s;
+}
+.chip-right{
+  right:-16px;bottom:30%;
+  animation-duration:5s;animation-delay:-2s;
+}
+.chip-top{
+  top:16px;right:16px;
+  animation-duration:3.5s;animation-delay:-1s;
+}
+.chip-icon{
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;
+}
+.chip-icon.blue{background:rgba(58,91,240,.15);color:var(--blue)}
+.chip-icon.cyan{background:rgba(0,212,232,.15);color:#00A8B5}
+.chip-icon.lime{background:rgba(193,255,0,.2);color:#5A7500}
+.chip-label{font-size:.7rem;color:var(--mid);font-weight:500;margin-top:1px}
+
+/* Card overlay info */
+.photo-info-bar{
+  position:absolute;bottom:0;right:0;left:0;
+  background:linear-gradient(transparent,rgba(6,9,30,.95));
+  padding:40px 24px 24px;
+  z-index:2;
+}
+.photo-info-bar h3{
+  color:#fff;font-size:1.3rem;font-weight:800;margin-bottom:4px;
+}
+.photo-info-bar p{
+  color:var(--cyan);font-size:.82rem;font-weight:600;
+}
+
+/* ─── BENTO STATS ─── */
+#stats{padding:80px 56px}
+.bento{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  max-width:1100px;margin:0 auto;
+}
+.bento-card{
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:20px;padding:28px 24px;
+  position:relative;overflow:hidden;
+  transition:transform .25s,box-shadow .25s,border-color .25s;
+}
+.bento-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 12px 40px rgba(58,91,240,.1);
+  border-color:rgba(58,91,240,.3);
+}
+.bento-card::after{
+  content:'';
+  position:absolute;top:0;right:0;
+  width:60px;height:60px;
+  background:radial-gradient(circle at top right,rgba(58,91,240,.12),transparent 70%);
+  pointer-events:none;
+}
+.bento-num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:2.8rem;font-weight:700;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  line-height:1;margin-bottom:8px;
+}
+.bento-num.lime{background:linear-gradient(135deg,#5A9900,#C1FF00)}
+.bento-label{font-size:.82rem;color:var(--mid);font-weight:500;line-height:1.4}
+.bento-icon{
+  position:absolute;bottom:16px;left:16px;
+  font-size:1.4rem;opacity:.2;
+}
+
+/* ─── SECTION BASE ─── */
+section{padding:96px 56px}
+.container{max-width:1100px;margin:0 auto}
+.s-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.72rem;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--blue);margin-bottom:14px;
+}
+.s-tag::before{
+  content:'';width:20px;height:2px;
+  background:var(--blue);border-radius:1px;
+}
+.s-h2{
+  font-size:clamp(1.9rem,3.8vw,2.9rem);
+  font-weight:800;line-height:1.2;
+  margin-bottom:16px;color:var(--text);
+}
+.s-h2 .blue{color:var(--blue)}
+.s-h2 .grad{
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.s-lead{
+  font-size:1rem;color:var(--mid);
+  line-height:1.75;max-width:560px;
+}
+
+/* ─── ABOUT ─── */
+#about{background:var(--bg)}
+.about-grid{
+  display:grid;
+  grid-template-columns:380px 1fr;
+  gap:64px;align-items:start;
+  margin-top:56px;
+}
+.about-photo-wrap{
+  position:sticky;top:100px;
+}
+.about-photo-card{
+  border-radius:24px;overflow:hidden;
+  background:linear-gradient(145deg,var(--dark),var(--dark2));
+  box-shadow:0 20px 60px rgba(58,91,240,.2);
+  aspect-ratio:.78/1;position:relative;
+  border:1px solid rgba(58,91,240,.2);
+}
+.about-photo-card img{
+  width:100%;height:100%;
+  object-fit:cover;object-position:top;
+  mix-blend-mode:lighten;
+  position:absolute;inset:0;
+}
+.about-photo-card::before{
+  content:'';position:absolute;
+  inset:0;z-index:1;
+  background:linear-gradient(to bottom,transparent 50%,rgba(6,9,30,.9) 100%);
+}
+.about-photo-placeholder{
+  position:absolute;inset:0;z-index:0;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.15);font-size:4rem;
+}
+.about-photo-bottom{
+  position:absolute;bottom:0;right:0;left:0;z-index:2;
+  padding:24px;
+}
+.about-degree-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(193,255,0,.15);
+  border:1px solid rgba(193,255,0,.3);
+  color:var(--lime2);font-size:.75rem;font-weight:700;
+  padding:6px 14px;border-radius:100px;
+}
+
+.about-content{}
+.about-content p{
+  font-size:1rem;line-height:1.8;color:var(--mid);margin-bottom:18px;
+}
+.about-content p strong{color:var(--text);font-weight:700}
+
+/* Experience timeline */
+.timeline{margin-top:36px;}
+.tl-item{
+  display:flex;gap:16px;
+  padding-bottom:28px;
+  position:relative;
+}
+.tl-item::before{
+  content:'';
+  position:absolute;
+  right:19px;top:36px;
+  width:2px;bottom:0;
+  background:linear-gradient(to bottom,var(--border),transparent);
+}
+.tl-dot{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;
+  border:2px solid var(--border);
+  background:var(--white);
+  box-shadow:0 4px 12px rgba(58,91,240,.1);
+}
+.tl-content{}
+.tl-title{font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:3px}
+.tl-sub{font-size:.82rem;color:var(--light)}
+
+/* Skill bars */
+.skills{margin-top:32px}
+.skill-row{margin-bottom:16px}
+.skill-head{
+  display:flex;justify-content:space-between;
+  font-size:.82rem;font-weight:600;color:var(--text);
+  margin-bottom:6px;
+}
+.skill-bar{
+  height:8px;background:var(--border);border-radius:100px;overflow:hidden;
+}
+.skill-fill{
+  height:100%;border-radius:100px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  transform:scaleX(0);transform-origin:right;
+  transition:transform 1.2s cubic-bezier(.4,0,.2,1);
+}
+.skill-fill.animated{transform:scaleX(1)}
+.skill-fill.lime{background:linear-gradient(90deg,#5A9900,var(--lime))}
+
+/* ─── WHY DIFFERENT ─── */
+#why{background:var(--white);position:relative;overflow:hidden}
+#why::before{
+  content:'';position:absolute;
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(58,91,240,.05),transparent 70%);
+  top:-200px;left:-100px;pointer-events:none;
+}
+.why-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:20px;margin-top:56px;
+}
+.why-card{
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:24px;padding:36px 28px;
+  position:relative;overflow:hidden;
+  transition:transform .25s,border-color .25s,box-shadow .25s;
+  cursor:default;
+}
+.why-card:hover{
+  transform:translateY(-8px) rotateX(2deg);
+  border-color:var(--blue);
+  box-shadow:0 20px 50px rgba(58,91,240,.12);
+}
+.why-card::before{
+  content:'';position:absolute;top:0;right:0;left:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  transform:scaleX(0);transform-origin:right;
+  transition:transform .4s ease;
+  border-radius:0 0 0 0;
+}
+.why-card:hover::before{transform:scaleX(1)}
+.why-num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:3.5rem;font-weight:700;
+  color:var(--border);line-height:1;
+  margin-bottom:16px;
+  transition:color .3s;
+}
+.why-card:hover .why-num{color:rgba(58,91,240,.12)}
+.why-icon-wrap{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;margin-bottom:16px;
+  transition:transform .3s;
+}
+.why-card:hover .why-icon-wrap{transform:scale(1.1) rotate(-5deg)}
+.ic-blue{background:rgba(58,91,240,.1)}
+.ic-cyan{background:rgba(0,212,232,.1)}
+.ic-lime{background:rgba(193,255,0,.15)}
+.why-h{font-size:1.1rem;font-weight:800;margin-bottom:10px;color:var(--text)}
+.why-p{font-size:.87rem;color:var(--mid);line-height:1.65}
+
+/* ─── OFFERING (PLANS) ─── */
+#plans{
+  background:var(--dark);
+  position:relative;overflow:hidden;
+}
+#plans::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:28px 28px;pointer-events:none;
+}
+.plans-glow{
+  position:absolute;
+  width:700px;height:400px;
+  background:radial-gradient(ellipse,rgba(58,91,240,.2),transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.plans-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:20px;margin-top:56px;position:relative;z-index:1;
+}
+.plan-card{
+  border-radius:24px;padding:32px 28px;
+  border:1.5px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(4px);
+  transition:transform .25s,border-color .25s,background .25s;
+  position:relative;overflow:hidden;
+}
+.plan-card:hover{
+  transform:translateY(-6px);
+  border-color:rgba(58,91,240,.5);
+  background:rgba(58,91,240,.08);
+}
+.plan-card.featured{
+  border-color:var(--cyan);
+  background:rgba(0,212,232,.06);
+}
+.plan-badge{
+  position:absolute;top:-1px;right:24px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  color:#fff;font-size:.7rem;font-weight:800;
+  padding:4px 14px;border-radius:0 0 12px 12px;letter-spacing:.05em;
+}
+.plan-name{
+  font-size:1rem;font-weight:800;color:#fff;
+  margin-bottom:8px;margin-top:8px;
+}
+.plan-desc{
+  font-size:.85rem;color:rgba(255,255,255,.5);
+  line-height:1.6;margin-bottom:24px;
+}
+.plan-features{list-style:none;margin-bottom:28px;}
+.plan-features li{
+  display:flex;align-items:center;gap:10px;
+  font-size:.83rem;color:rgba(255,255,255,.7);
+  padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);
+}
+.plan-features li::before{
+  content:'✓';color:var(--cyan);font-weight:800;font-size:.8rem;flex-shrink:0;
+}
+.plan-cta{
+  display:block;text-align:center;
+  background:rgba(255,255,255,.08);
+  color:#fff;font-weight:700;font-size:.88rem;
+  padding:13px;border-radius:12px;
+  text-decoration:none;
+  border:1px solid rgba(255,255,255,.12);
+  transition:background .2s,border-color .2s;
+}
+.plan-cta:hover{background:rgba(58,91,240,.25);border-color:var(--blue)}
+.plan-card.featured .plan-cta{
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  border-color:transparent;
+  box-shadow:0 6px 20px rgba(0,212,232,.3);
+}
+
+/* ─── SURVEY ─── */
+#survey{background:var(--bg)}
+.survey-wrap{
+  max-width:720px;margin:56px auto 0;
+  background:var(--white);
+  border-radius:28px;
+  box-shadow:0 8px 60px rgba(58,91,240,.1);
+  overflow:hidden;
+  border:1.5px solid var(--border);
+}
+.survey-top{
+  padding:40px 48px;
+  background:linear-gradient(135deg,var(--dark),var(--dark2));
+  position:relative;overflow:hidden;
+}
+.survey-top::before{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,232,.15),transparent 70%);
+  top:-100px;left:-80px;pointer-events:none;
+}
+.survey-top h3{
+  font-size:1.4rem;font-weight:800;color:#fff;
+  margin-bottom:6px;position:relative;z-index:1;
+}
+.survey-top p{
+  font-size:.87rem;color:rgba(255,255,255,.55);
+  line-height:1.6;position:relative;z-index:1;
+}
+.progress-wrap{
+  margin-top:20px;background:rgba(255,255,255,.1);
+  border-radius:100px;height:5px;position:relative;z-index:1;
+}
+.progress-fill{
+  height:5px;border-radius:100px;
+  background:linear-gradient(90deg,var(--cyan),var(--lime));
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+.progress-meta{
+  margin-top:8px;font-size:.72rem;
+  color:rgba(255,255,255,.35);
+  display:flex;justify-content:space-between;
+  position:relative;z-index:1;
+}
+
+.survey-body{padding:40px 48px}
+.q-step{display:none}
+.q-step.active{display:block;animation:qin .3s ease}
+@keyframes qin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
+.q-label{
+  font-size:1.05rem;font-weight:700;color:var(--text);
+  margin-bottom:22px;line-height:1.5;
+}
+.q-label .q-num{
+  color:var(--blue);font-size:.78rem;font-weight:800;
+  letter-spacing:.1em;display:block;margin-bottom:4px;
+}
+
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;
+  border:2px solid var(--border);
+  border-radius:14px;cursor:pointer;
+  transition:border-color .2s,background .2s,transform .15s;
+  font-size:.92rem;font-weight:500;color:var(--text);
+}
+.opt:hover{border-color:var(--blue);background:rgba(58,91,240,.03);transform:translateX(-3px)}
+.opt.sel{border-color:var(--blue);background:rgba(58,91,240,.06)}
+.opt input{accent-color:var(--blue);width:18px;height:18px;cursor:pointer;flex-shrink:0}
+
+.scale-row{display:flex;gap:6px}
+.sc-btn{
+  flex:1;padding:14px 4px;
+  border:2px solid var(--border);border-radius:12px;
+  background:transparent;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:1rem;font-weight:700;color:var(--mid);
+  transition:all .2s;
+}
+.sc-btn:hover{border-color:var(--blue);color:var(--blue)}
+.sc-btn.sel{
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  color:#fff;border-color:transparent;
+  transform:translateY(-2px);
+  box-shadow:0 4px 14px rgba(58,91,240,.3);
+}
+.scale-labels{
+  display:flex;justify-content:space-between;
+  font-size:.72rem;color:var(--light);margin-top:8px;
+}
+
+.f-input{
+  width:100%;padding:14px 18px;
+  border:2px solid var(--border);border-radius:14px;
+  font-family:'Rubik',sans-serif;font-size:.95rem;color:var(--text);
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  background:var(--white);
+}
+.f-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(58,91,240,.1)}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.s-nav{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:28px;padding-top:24px;
+  border-top:1px solid var(--border);
+}
+.btn-back{
+  background:none;border:none;
+  font-family:'Rubik',sans-serif;font-size:.88rem;
+  color:var(--light);cursor:pointer;padding:8px 14px;
+  border-radius:8px;transition:color .2s,background .2s;
+}
+.btn-back:hover{color:var(--text);background:var(--bg)}
+.btn-back:disabled{opacity:.25;cursor:default}
+.btn-next{
+  background:var(--blue);color:#fff;
+  border:none;font-family:'Rubik',sans-serif;
+  font-size:.92rem;font-weight:700;
+  padding:12px 28px;border-radius:100px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 16px rgba(58,91,240,.35);
+  display:flex;align-items:center;gap:8px;
+}
+.btn-next:hover{transform:translateX(-4px);box-shadow:0 6px 24px rgba(58,91,240,.45)}
+.btn-submit{
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  box-shadow:0 4px 20px rgba(0,212,232,.3);
+}
+.btn-submit:hover{box-shadow:0 6px 28px rgba(0,212,232,.4)}
+
+/* Thank you */
+.ty-screen{
+  display:none;text-align:center;padding:56px 40px;
+}
+.ty-ring{
+  width:88px;height:88px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  margin:0 auto 24px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.2rem;
+  box-shadow:0 8px 32px rgba(58,91,240,.4);
+  animation:pop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.ty-screen h3{font-size:1.7rem;font-weight:800;margin-bottom:12px}
+.ty-screen p{color:var(--mid);line-height:1.7;max-width:420px;margin:0 auto}
+
+/* ─── FOOTER ─── */
+footer{
+  background:var(--dark);
+  padding:40px 56px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.footer-logo{
+  font-weight:800;font-size:1rem;
+  background:linear-gradient(90deg,#fff,rgba(255,255,255,.5));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.footer-txt{
+  font-size:.8rem;color:rgba(255,255,255,.25);
+  text-align:center;
+}
+.footer-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+}
+
+/* ─── REVEAL ─── */
+.reveal{
+  opacity:0;transform:translateY(24px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+.reveal.visible{opacity:1;transform:none}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:1024px){
+  .hero-inner{grid-template-columns:1fr;gap:40px}
+  .hero-right{max-width:420px;margin:0 auto}
+  .about-grid{grid-template-columns:1fr}
+  .about-photo-wrap{position:static}
+  .bento{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  section,#hero{padding:72px 24px}
+  nav{padding:14px 24px}
+  .why-grid,.plans-grid{grid-template-columns:1fr}
+  .bento{grid-template-columns:1fr 1fr}
+  .survey-top,.survey-body{padding:28px 24px}
+  .f-row{grid-template-columns:1fr}
+  footer{padding:28px 24px;flex-direction:column;text-align:center}
+}
+@media(max-width:480px){
+  .bento{grid-template-columns:1fr}
+  .hero-h1{font-size:2.4rem}
+  .scale-row{flex-wrap:wrap}
+  .sc-btn{flex:0 0 calc(20% - 5px)}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-dot"></span>
+    לידור גבאי
+  </a>
+  <div class="nav-right">
+    <a href="#about" class="nav-link">אודות</a>
+    <a href="#plans" class="nav-link">מסלולים</a>
+    <a href="#survey" class="nav-btn">השאירו פרטים</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="aurora">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+  </div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow">מרכז מתמטיקה · קרית שמונה והצפון</div>
+
+      <h1 class="hero-h1">
+        מתמטיקה<br>
+        <span class="grad-text">שמדליקה</span><br>
+        ילדים
+      </h1>
+
+      <p class="hero-p">
+        גישה אחרת לחלוטין — שמשלבת טכנולוגיה, קצב אישי ובניית ביטחון עצמי.
+        לא עוד שינון. לא עוד לחץ. רק הבנה אמיתית.
+      </p>
+
+      <div class="hero-btns">
+        <a href="#survey" class="btn-glow">אני רוצה לשמוע עוד ←</a>
+        <a href="#about" class="btn-ghost">קצת על לידור</a>
+      </div>
+
+      <div class="hero-badges">
+        <div class="hbadge"><span>🎓</span> תואר בהצטיינות</div>
+        <div class="hbadge"><span>⏱️</span> 5 שנות ניסיון</div>
+        <div class="hbadge"><span>📍</span> צפון ישראל</div>
+        <div class="hbadge"><span>✅</span> כל הגילאים</div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="photo-card">
+        <!-- תמונה: שמור lidor.png באותה תיקייה -->
+        <img src="lidor.png" alt="לידור גבאי" onerror="this.style.display='none';document.querySelector('.photo-placeholder').style.display='flex'"/>
+        <div class="photo-placeholder" style="display:none">
+          <div class="pl-icon">👤</div>
+          <span>הוסף תמונה בשם lidor.png</span>
+        </div>
+
+        <div class="photo-chip chip-left">
+          <div class="chip-icon blue">🏆</div>
+          <div>
+            <div>תואר בהצטיינות</div>
+            <div class="chip-label">מתמטיקה ומדעי המחשב</div>
+          </div>
+        </div>
+
+        <div class="photo-chip chip-right">
+          <div class="chip-icon cyan">📈</div>
+          <div>
+            <div>שיפור בבגרות</div>
+            <div class="chip-label">עשרות תלמידים</div>
+          </div>
+        </div>
+
+        <div class="photo-chip chip-top">
+          <div class="chip-icon lime">⭐</div>
+          <div>
+            <div>5 שנות ניסיון</div>
+            <div class="chip-label">הוראה פרטית</div>
+          </div>
+        </div>
+
+        <div class="photo-info-bar">
+          <h3>לידור גבאי</h3>
+          <p>מורה מתמטיקה · אריאל בהצטיינות</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BENTO STATS -->
+<section id="stats" style="padding:64px 56px">
+  <div class="bento">
+    <div class="bento-card reveal">
+      <div class="bento-num" data-count="5">0</div>
+      <div class="bento-label">שנות ניסיון בהוראה<br>פרטית וקבוצתית</div>
+      <div class="bento-icon">📚</div>
+    </div>
+    <div class="bento-card reveal">
+      <div class="bento-num" data-count="100">0</div>
+      <div class="bento-label">תלמידים שעברו<br>הכנה לבגרות</div>
+      <div class="bento-icon">🎯</div>
+    </div>
+    <div class="bento-card reveal">
+      <div class="bento-num lime" data-count="100" data-suffix="%">0</div>
+      <div class="bento-label">מחויבות לכל<br>תלמיד ותלמיד</div>
+      <div class="bento-icon">💪</div>
+    </div>
+    <div class="bento-card reveal">
+      <div class="bento-num" data-count="4" data-suffix=" ×">0</div>
+      <div class="bento-label">יחס מדריך-תלמיד<br>מקסימלי בקבוצה</div>
+      <div class="bento-icon">👥</div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <span class="s-tag">אודות</span>
+    <h2 class="s-h2">מכיר כל ילד.<br><span class="grad">מאמין בכל אחד.</span></h2>
+    <p class="s-lead">לא מורה כיתתי. מורה שגדל בחוגים, קייטנות ושיעורים פרטיים — ולמד איך ילדים <em>באמת</em> לומדים.</p>
+
+    <div class="about-grid">
+      <div class="about-photo-wrap">
+        <div class="about-photo-card reveal">
+          <img src="lidor.png" alt="לידור גבאי" onerror="this.style.display='none'"/>
+          <div class="about-photo-placeholder">👤</div>
+          <div class="about-photo-bottom">
+            <div class="about-degree-badge">🎓 בוגר אריאל בהצטיינות</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-content">
+        <p class="reveal">
+          <strong>שמי לידור גבאי, בן 28 מקרית שמונה.</strong>
+          למדתי מתמטיקה ומדעי המחשב באוניברסיטת אריאל — <strong>בהצטיינות</strong> — ומאז הקדשתי את עצמי לדבר שאני אוהב: ללמד.
+        </p>
+        <p class="reveal">
+          5 שנות ניסיון ב<strong>הוראה פרטית</strong>, קבוצות לימוד, חוגים, קייטנות, ועבודה עם עמותות כמו <strong>יכולות</strong> ו<strong>חותם</strong>.
+          עזרתי להכין עשרות תלמידים לבגרויות ו<strong>שיפרתי ממשיות את הציונים שלהם</strong>.
+        </p>
+        <p class="reveal">
+          הדבר שמייחד אותי? אני לא עוצר בחומר. אני עוצר כשהילד <strong>הבין באמת</strong>.
+        </p>
+
+        <div class="timeline reveal">
+          <div class="tl-item">
+            <div class="tl-dot">🎓</div>
+            <div class="tl-content">
+              <div class="tl-title">תואר בהצטיינות — מתמטיקה ומדעי המחשב</div>
+              <div class="tl-sub">אוניברסיטת אריאל</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot">🏢</div>
+            <div class="tl-content">
+              <div class="tl-title">עבודה במרכזי למידה — עמותות יכולות וחותם</div>
+              <div class="tl-sub">הוראה מקצועית למגוון רמות גיל</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot">📊</div>
+            <div class="tl-content">
+              <div class="tl-title">הכנה לבגרויות ושיפור ממשי בציונים</div>
+              <div class="tl-sub">עשרות תלמידים — כיתות ז׳ עד י״ב</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot">🚀</div>
+            <div class="tl-content">
+              <div class="tl-title">הקמת מרכז מתמטיקה עצמאי</div>
+              <div class="tl-sub">קרית שמונה ואזור הצפון — עכשיו!</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="skills reveal">
+          <div class="skill-row">
+            <div class="skill-head"><span>הוראת מתמטיקה</span><span>97%</span></div>
+            <div class="skill-bar"><div class="skill-fill" style="--w:.97"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span>הכנה לבגרות</span><span>95%</span></div>
+            <div class="skill-bar"><div class="skill-fill" style="--w:.95"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span>פדגוגיה חדשנית</span><span>92%</span></div>
+            <div class="skill-bar"><div class="skill-fill lime" style="--w:.92"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span>עבודה עם ילדים מכל הגילאים</span><span>100%</span></div>
+            <div class="skill-bar"><div class="skill-fill" style="--w:1"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY DIFFERENT -->
+<section id="why">
+  <div class="container">
+    <span class="s-tag">למה שונה</span>
+    <h2 class="s-h2">לא עוד <span class="blue">שינון</span>.<br>הפעם — הבנה אמיתית.</h2>
+    <p class="s-lead">שלושה עקרונות שהופכים את הלמידה אצלנו לחוויה — לא לחובה.</p>
+
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <div class="why-num">01</div>
+        <div class="why-icon-wrap ic-blue">🎮</div>
+        <div class="why-h">שיטות חדשניות וטכנולוגיה</div>
+        <p class="why-p">אפליקציות, ויזואליזציה, כלים דיגיטליים שהילד כבר מכיר ואוהב — אנחנו מכניסים אותם לתוך הלמידה.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-num">02</div>
+        <div class="why-icon-wrap ic-cyan">⚡</div>
+        <div class="why-h">קצב אישי לכל ילד</div>
+        <p class="why-p">לא ממשיכים קדימה עד שהיסוד חזק. כל ילד לומד בקצב שלו, בלי לחץ ובלי השוואות.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-num">03</div>
+        <div class="why-icon-wrap ic-lime">🧠</div>
+        <div class="why-h">בניית ביטחון עצמי</div>
+        <p class="why-p">הפחד ממתמטיקה הוא לרוב פחד מכישלון. אנחנו בונים הצלחות קטנות שמתחברות לאמונה גדולה.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANS -->
+<section id="plans">
+  <div class="plans-glow"></div>
+  <div class="container">
+    <span class="s-tag" style="color:rgba(255,255,255,.5)">מסלולים</span>
+    <h2 class="s-h2" style="color:#fff">מנוי חודשי גמיש.<br><span style="background:linear-gradient(90deg,var(--cyan),var(--lime));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">ללא התחייבות ארוכה.</span></h2>
+    <p class="s-lead" style="color:rgba(255,255,255,.5)">בחרו את המסלול המתאים — תמיד אפשר לשנות.</p>
+
+    <div class="plans-grid">
+      <div class="plan-card reveal">
+        <div class="plan-name">מסלול בסיס</div>
+        <div class="plan-desc">חיזוק שיטתי של החומר הבית-ספרי עם מעקב שבועי.</div>
+        <ul class="plan-features">
+          <li>2 מפגשים בשבוע</li>
+          <li>חיזוק חומר + תרגול</li>
+          <li>מתאים לכיתות א׳–ו׳</li>
+          <li>קבוצות עד 4 תלמידים</li>
+        </ul>
+        <a href="#survey" class="plan-cta">אני מעוניין ←</a>
+      </div>
+
+      <div class="plan-card featured reveal">
+        <div class="plan-badge">הכי פופולרי</div>
+        <div class="plan-name">מסלול שיפור</div>
+        <div class="plan-desc">תוכנית אישית + מעקב צמוד + דוח חודשי להורים.</div>
+        <ul class="plan-features">
+          <li>3 מפגשים בשבוע</li>
+          <li>תוכנית לימוד אישית</li>
+          <li>דוח התקדמות להורים</li>
+          <li>כיתות ג׳–י׳</li>
+          <li>שעות גמישות</li>
+        </ul>
+        <a href="#survey" class="plan-cta">אני מעוניין ←</a>
+      </div>
+
+      <div class="plan-card reveal">
+        <div class="plan-name">מסלול אינטנסיב</div>
+        <div class="plan-desc">הכנה מרוכזת לבגרות ולמבחנים — תוצאות שנרגיש.</div>
+        <ul class="plan-features">
+          <li>4–5 מפגשים בשבוע</li>
+          <li>הכנה מלאה לבגרות</li>
+          <li>ליווי אינטנסיבי</li>
+          <li>כיתות ז׳–י״ב</li>
+          <li>זמינות לשאלות בין מפגשים</li>
+        </ul>
+        <a href="#survey" class="plan-cta">אני מעוניין ←</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SURVEY -->
+<section id="survey">
+  <div class="container">
+    <span class="s-tag">בדיקת שוק</span>
+    <h2 class="s-h2">עזרו לנו לבנות<br><span class="grad">בדיוק בשבילכם</span></h2>
+    <p class="s-lead">המרכז בדרך — ואנחנו רוצים לשמוע מכם לפני שנפתח. ענו על 5 שאלות קצרות ונחזור אליכם ראשונים.</p>
+
+    <div class="survey-wrap">
+      <div class="survey-top">
+        <h3>סקר מקדים — 2 דקות בלבד</h3>
+        <p>כל תשובה עוזרת לנו לבנות את המרכז שהצפון צריך. בסוף תוכלו להשאיר פרטים לעדכון ראשון.</p>
+        <div class="progress-wrap">
+          <div class="progress-fill" id="pgBar" style="width:20%"></div>
+        </div>
+        <div class="progress-meta">
+          <span>שאלה <span id="qn">1</span> מתוך 5</span>
+          <span id="pct">20%</span>
+        </div>
+      </div>
+
+      <div class="survey-body" id="sBody">
+
+        <div class="q-step active" id="q1">
+          <div class="q-label">
+            <span class="q-num">שאלה 01 —</span>
+            כמה ילדים בגיל בית ספר יש לכם בבית?
+          </div>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="q1" value="1"/> ילד אחד</label>
+            <label class="opt"><input type="radio" name="q1" value="2"/> שניים</label>
+            <label class="opt"><input type="radio" name="q1" value="3+"/> שלושה ויותר</label>
+            <label class="opt"><input type="radio" name="q1" value="0"/> עדיין לא בגיל הזה</label>
+          </div>
+          <div class="s-nav">
+            <button class="btn-back" disabled>→ חזרה</button>
+            <button class="btn-next" onclick="goNext(1)">המשך ←</button>
+          </div>
+        </div>
+
+        <div class="q-step" id="q2">
+          <div class="q-label">
+            <span class="q-num">שאלה 02 —</span>
+            האם הרגשתם שהילד שלכם מתקשה במתמטיקה?
+          </div>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="q2" value="yes-a-lot"/> כן מאוד — זה דאגה אמיתית</label>
+            <label class="opt"><input type="radio" name="q2" value="yes-a-bit"/> קצת — יש נושאים קשים</label>
+            <label class="opt"><input type="radio" name="q2" value="no"/> לא ממש, מסתדר בסדר</label>
+            <label class="opt"><input type="radio" name="q2" value="na"/> לא רלוונטי</label>
+          </div>
+          <div class="s-nav">
+            <button class="btn-back" onclick="goPrev(2)">→ חזרה</button>
+            <button class="btn-next" onclick="goNext(2)">המשך ←</button>
+          </div>
+        </div>
+
+        <div class="q-step" id="q3">
+          <div class="q-label">
+            <span class="q-num">שאלה 03 —</span>
+            כמה הייתם מוכנים לשלם בחודש עבור מרכז מתמטיקה איכותי?
+          </div>
+          <p style="font-size:.85rem;color:var(--mid);margin-bottom:16px;line-height:1.6;background:rgba(58,91,240,.05);border-right:3px solid var(--blue);padding:12px 16px;border-radius:0 10px 10px 0">
+            💡 <strong>שימו לב:</strong> מספר המפגשים בחודש יהיה פרופורציונלי לגובה התשלום — ככל שהמנוי גבוה יותר, יותר מפגשים ויותר תשומת לב אישית.
+          </p>
+          <input class="f-input" id="q3-open" type="text" placeholder="למשל: 400 ₪, 600 ₪..." style="font-size:1rem"/>
+          <div class="s-nav">
+            <button class="btn-back" onclick="goPrev(3)">→ חזרה</button>
+            <button class="btn-next" onclick="goNext(3)">המשך ←</button>
+          </div>
+        </div>
+
+        <div class="q-step" id="q4">
+          <div class="q-label">
+            <span class="q-num">שאלה 04 —</span>
+            מה הכי חשוב לכם? (אפשר לסמן כמה)
+          </div>
+          <div class="opts">
+            <label class="opt"><input type="checkbox" name="q4" value="atm"/> אווירה חיובית, בלי לחץ</label>
+            <label class="opt"><input type="checkbox" name="q4" value="res"/> תוצאות מהירות</label>
+            <label class="opt"><input type="checkbox" name="q4" value="personal"/> תשומת לב אישית</label>
+            <label class="opt"><input type="checkbox" name="q4" value="loc"/> מיקום נוח</label>
+            <label class="opt"><input type="checkbox" name="q4" value="price"/> מחיר סביר</label>
+          </div>
+          <div class="s-nav">
+            <button class="btn-back" onclick="goPrev(4)">→ חזרה</button>
+            <button class="btn-next" onclick="goNext(4)">המשך ←</button>
+          </div>
+        </div>
+
+        <div class="q-step" id="q5">
+          <div class="q-label">
+            <span class="q-num">שאלה 05 —</span>
+            אם המרכז יפתח בקרוב — כמה סיכוי שתירשמו?
+          </div>
+          <div class="scale-row" id="scaleG">
+            <button class="sc-btn" onclick="pickScale(1)">1</button>
+            <button class="sc-btn" onclick="pickScale(2)">2</button>
+            <button class="sc-btn" onclick="pickScale(3)">3</button>
+            <button class="sc-btn" onclick="pickScale(4)">4</button>
+            <button class="sc-btn" onclick="pickScale(5)">5</button>
+            <button class="sc-btn" onclick="pickScale(6)">6</button>
+            <button class="sc-btn" onclick="pickScale(7)">7</button>
+            <button class="sc-btn" onclick="pickScale(8)">8</button>
+            <button class="sc-btn" onclick="pickScale(9)">9</button>
+            <button class="sc-btn" onclick="pickScale(10)">10</button>
+          </div>
+          <div class="scale-labels"><span>בטח שלא</span><span>בטח כן!</span></div>
+
+          <div style="margin-top:28px;border-top:1px solid var(--border);padding-top:24px">
+            <p style="font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:14px">
+              רוצים לשמוע ראשונים? השאירו פרטים <span style="color:var(--light);font-weight:400">(רשות)</span>
+            </p>
+            <div class="f-row" style="margin-bottom:10px">
+              <input class="f-input" id="fi-name" placeholder="שם מלא" type="text"/>
+              <input class="f-input" id="fi-phone" placeholder="טלפון" type="tel" dir="ltr"/>
+            </div>
+            <input class="f-input" id="fi-city" placeholder="עיר מגורים" type="text"/>
+          </div>
+
+          <div class="s-nav">
+            <button class="btn-back" onclick="goPrev(5)">→ חזרה</button>
+            <button class="btn-next btn-submit" onclick="submitForm()">שלח ותודה! ✓</button>
+          </div>
+        </div>
+
+      </div><!-- /sBody -->
+
+      <div class="ty-screen" id="tyScreen">
+        <div class="ty-ring">✓</div>
+        <h3>תודה רבה! 🎉</h3>
+        <p>התשובות שלכם עוזרות לנו לבנות מרכז שבאמת מתאים לצפון שלנו.<br>
+        אם השארתם פרטים — <strong>נחזור אליכם ראשונים</strong> עם כל חדש.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">לידור גבאי | מרכז מתמטיקה</div>
+  <div class="footer-txt">קרית שמונה · צפון ישראל · כל הזכויות שמורות © 2025</div>
+  <div class="footer-dot"></div>
+</footer>
+
+<script>
+// ── Nav ──────────────────────────────────────────────────────────
+window.addEventListener('scroll',()=>{
+  document.getElementById('mainNav').classList.toggle('solid',scrollY>50)
+})
+
+// ── Reveal on scroll ─────────────────────────────────────────────
+const ro=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible')
+      e.target.querySelectorAll('.skill-fill').forEach(f=>{
+        f.style.transform=`scaleX(${f.style.getPropertyValue('--w')||1})`
+        f.classList.add('animated')
+      })
+    }
+  })
+},{threshold:.12})
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el))
+
+// ── Counter animation ─────────────────────────────────────────────
+const co=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&!e.target.dataset.done){
+      e.target.dataset.done='1'
+      const target=+e.target.dataset.count
+      const suffix=e.target.dataset.suffix||''
+      let cur=0,step=target/60
+      const t=setInterval(()=>{
+        cur=Math.min(cur+step,target)
+        e.target.textContent=Math.round(cur)+(cur>=target?'+':'')+suffix
+        if(cur>=target)clearInterval(t)
+      },20)
+    }
+  })
+},{threshold:.5})
+document.querySelectorAll('.bento-num[data-count]').forEach(el=>co.observe(el))
+
+// ── Opt highlight ─────────────────────────────────────────────────
+document.querySelectorAll('.opt input').forEach(inp=>{
+  inp.addEventListener('change',()=>{
+    if(inp.type==='radio')
+      document.querySelectorAll(`.opt input[name="${inp.name}"]`).forEach(i=>i.closest('.opt').classList.remove('sel'))
+    inp.closest('.opt').classList.toggle('sel',inp.checked)
+  })
+})
+
+// ── Survey logic ──────────────────────────────────────────────────
+let cur=1
+function setQ(n){
+  document.querySelectorAll('.q-step').forEach(s=>s.classList.remove('active'))
+  document.getElementById('q'+n).classList.add('active')
+  cur=n
+  const p=Math.round(n/5*100)
+  document.getElementById('pgBar').style.width=p+'%'
+  document.getElementById('qn').textContent=n
+  document.getElementById('pct').textContent=p+'%'
+}
+function goNext(n){if(n<5)setQ(n+1)}
+function goPrev(n){if(n>1)setQ(n-1)}
+
+let scaleVal=0
+function pickScale(v){
+  scaleVal=v
+  document.querySelectorAll('#scaleG .sc-btn').forEach((b,i)=>b.classList.toggle('sel',i<v))
+}
+
+// ── DATA STORAGE — saves every submission to localStorage ─────────
+const STORE_KEY = 'lidor_survey_responses'
+
+function getStored(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]') }
+  catch(e){ return [] }
+}
+
+function saveResponse(resp){
+  const all=getStored()
+  all.push(resp)
+  localStorage.setItem(STORE_KEY,JSON.stringify(all))
+}
+
+function collectFormData(){
+  // q1
+  const q1=document.querySelector('input[name="q1"]:checked')
+  // q2
+  const q2=document.querySelector('input[name="q2"]:checked')
+  // q3 — open text
+  const q3=document.getElementById('q3-open').value.trim()
+  // q4 — checkboxes
+  const q4=Array.from(document.querySelectorAll('input[name="q4"]:checked')).map(i=>i.value)
+  // q5 — scale
+  const name=document.getElementById('fi-name').value.trim()
+  const phone=document.getElementById('fi-phone').value.trim()
+  const city=document.getElementById('fi-city').value.trim()
+
+  return {
+    timestamp: new Date().toLocaleString('he-IL'),
+    num_kids:     q1 ? q1.value : '',
+    difficulty:   q2 ? q2.value : '',
+    budget:       q3,
+    priorities:   q4.join(' | '),
+    likelihood:   scaleVal,
+    name,phone,city
+  }
+}
+
+function submitForm(){
+  const resp = collectFormData()
+  saveResponse(resp)
+  document.getElementById('sBody').style.display='none'
+  const ty=document.getElementById('tyScreen')
+  ty.style.display='block'
+  document.getElementById('pgBar').style.width='100%'
+  document.getElementById('pct').textContent='100%'
+  ty.scrollIntoView({behavior:'smooth',block:'center'})
+  // refresh admin panel if open
+  renderAdmin()
+}
+
+// ── ADMIN PANEL ───────────────────────────────────────────────────
+// Access: type "admin" anywhere on the page (hidden shortcut)
+let typeBuf=''
+document.addEventListener('keydown',e=>{
+  typeBuf=(typeBuf+e.key).slice(-5)
+  if(typeBuf==='admin'){
+    document.getElementById('adminPanel').classList.toggle('open')
+    renderAdmin()
+  }
+})
+
+function renderAdmin(){
+  const all=getStored()
+  const panel=document.getElementById('adminPanel')
+  if(!panel.classList.contains('open')) return
+
+  const count=document.getElementById('adminCount')
+  const tbody=document.getElementById('adminTbody')
+  count.textContent=all.length+' תגובות'
+
+  if(!all.length){ tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">אין תגובות עדיין</td></tr>'; return }
+
+  tbody.innerHTML=all.slice().reverse().map((r,i)=>`
+    <tr>
+      <td>${r.timestamp}</td>
+      <td>${r.num_kids}</td>
+      <td>${r.difficulty}</td>
+      <td>${r.budget}</td>
+      <td style="font-size:.75rem">${r.priorities}</td>
+      <td>${r.likelihood}/10</td>
+      <td>${r.name||'—'}</td>
+      <td>${r.phone||'—'}</td>
+      <td>${r.city||'—'}</td>
+    </tr>`).join('')
+}
+
+function exportCSV(){
+  const all=getStored()
+  if(!all.length){ alert('אין נתונים לייצוא'); return }
+  const headers=['תאריך','ילדים','קושי','תקציב','עדיפויות','סיכוי','שם','טלפון','עיר']
+  const rows=all.map(r=>[
+    r.timestamp,r.num_kids,r.difficulty,r.budget,
+    r.priorities,r.likelihood,r.name,r.phone,r.city
+  ])
+  const csv='﻿'+[headers,...rows].map(row=>row.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n')
+  const a=document.createElement('a')
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv)
+  a.download='lidor_survey_'+new Date().toISOString().slice(0,10)+'.csv'
+  a.click()
+}
+
+function clearData(){
+  if(confirm('למחוק את כל הנתונים? פעולה זו לא ניתנת לביטול.')){
+    localStorage.removeItem(STORE_KEY)
+    renderAdmin()
+  }
+}
+
+// ── Card tilt ─────────────────────────────────────────────────────
+document.querySelectorAll('.why-card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect()
+    const x=(e.clientX-r.left)/r.width-.5
+    const y=(e.clientY-r.top)/r.height-.5
+    card.style.transform=`translateY(-8px) rotateY(${x*8}deg) rotateX(${-y*6}deg)`
+  })
+  card.addEventListener('mouseleave',()=>{ card.style.transform='' })
+})
+</script>
+
+<!-- ─── ADMIN PANEL (hidden — type "admin" to open) ─── -->
+<div id="adminPanel" style="
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(6,9,30,.95);backdrop-filter:blur(12px);
+  overflow:auto;padding:32px;
+">
+<style>
+  #adminPanel.open{display:block!important}
+  #adminPanel h2{color:#fff;font-size:1.4rem;font-weight:800;margin-bottom:4px}
+  #adminPanel .adm-bar{display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+  #adminPanel .adm-count{color:rgba(255,255,255,.5);font-size:.88rem}
+  .adm-btn{
+    padding:9px 20px;border-radius:100px;border:none;cursor:pointer;
+    font-family:'Rubik',sans-serif;font-size:.85rem;font-weight:700;
+    transition:transform .15s;
+  }
+  .adm-btn:hover{transform:translateY(-2px)}
+  .adm-export{background:#3A5BF0;color:#fff;box-shadow:0 4px 16px rgba(58,91,240,.4)}
+  .adm-clear{background:rgba(255,60,60,.15);color:#ff6b6b;border:1px solid rgba(255,60,60,.3)}
+  .adm-close{background:rgba(255,255,255,.08);color:#fff;margin-right:auto}
+  .adm-table-wrap{overflow-x:auto;border-radius:16px;border:1px solid rgba(255,255,255,.08)}
+  .adm-table{width:100%;border-collapse:collapse;font-size:.8rem}
+  .adm-table th{
+    background:rgba(58,91,240,.2);color:rgba(255,255,255,.7);
+    padding:12px 14px;font-weight:700;text-align:right;
+    white-space:nowrap;
+  }
+  .adm-table td{
+    padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);
+    color:rgba(255,255,255,.75);vertical-align:top;
+  }
+  .adm-table tr:hover td{background:rgba(255,255,255,.03)}
+  .adm-empty{color:rgba(255,255,255,.25);font-size:.85rem;margin-top:16px}
+</style>
+  <div class="adm-bar">
+    <div>
+      <h2>📊 לוח נתוני סקר</h2>
+      <div class="adm-count" id="adminCount">טוען...</div>
+    </div>
+    <button class="adm-btn adm-export" onclick="exportCSV()">⬇ ייצוא CSV</button>
+    <button class="adm-btn adm-clear" onclick="clearData()">🗑 מחק הכל</button>
+    <button class="adm-btn adm-close" onclick="document.getElementById('adminPanel').classList.remove('open')">✕ סגור</button>
+  </div>
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>תאריך</th><th>ילדים</th><th>קושי</th><th>תקציב</th>
+          <th>עדיפויות</th><th>סיכוי</th><th>שם</th><th>טלפון</th><th>עיר</th>
+        </tr>
+      </thead>
+      <tbody id="adminTbody"></tbody>
+    </table>
+  </div>
+  <p style="color:rgba(255,255,255,.25);font-size:.75rem;margin-top:20px">
+    💾 הנתונים נשמרים בדפדפן של המשתמש (localStorage). לגישה לנתונים — פתח דף זה באותו דפדפן ואותו מכשיר.
+    ייצא CSV לגיבוי קבוע.
+  </p>
+</div>
+</body>
+</html>
