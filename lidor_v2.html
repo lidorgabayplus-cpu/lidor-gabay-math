@@ -1067,9 +1067,211 @@ footer{
   max-height:300px;
   padding:0 26px 22px;
 }
+
+/* Future bento card */
+.bento-future { justify-content: center; text-align: center; }
+.bento-future-icons { font-size: 1.8rem; letter-spacing: 4px; }
+
+/* ─── COMMUNITY LETTER ─── */
+#community {
+  padding: 100px 56px;
+  background: var(--dark);
+  position: relative;
+  overflow: hidden;
+}
+#community::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 50% 60% at 20% 50%, rgba(58,91,240,.18) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 40% at 80% 30%, rgba(0,212,232,.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+.community-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.community-flag {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 32px;
+}
+.community-flag-bar {
+  height: 4px; border-radius: 2px; flex: 1;
+  max-width: 48px;
+}
+.flag-blue { background: #002868; }
+.flag-white { background: rgba(255,255,255,.15); }
+.community-eyebrow {
+  font-size: .8rem; font-weight: 700; letter-spacing: .12em;
+  color: var(--cyan); text-transform: uppercase;
+}
+.community-title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 36px;
+}
+.community-title span {
+  background: linear-gradient(90deg, var(--blue2), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.community-letter {
+  display: flex; flex-direction: column; gap: 20px;
+}
+.community-p {
+  font-size: 1.05rem;
+  color: rgba(255,255,255,.72);
+  line-height: 1.85;
+  font-weight: 400;
+}
+.community-p strong {
+  color: rgba(255,255,255,.95);
+  font-weight: 700;
+}
+.community-p em {
+  color: var(--cyan);
+  font-style: normal;
+  font-weight: 600;
+}
+.community-divider {
+  width: 48px; height: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  border-radius: 2px;
+  margin: 4px 0;
+}
+.community-sig {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 12px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.community-sig-dot {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+.community-sig-name {
+  font-weight: 800; font-size: 1rem; color: #fff;
+}
+.community-sig-role {
+  font-size: .82rem; color: rgba(255,255,255,.45); margin-top: 2px;
+}
+.community-quote-mark {
+  font-size: 5rem; line-height: 1;
+  color: rgba(58,91,240,.2);
+  font-family: Georgia, serif;
+  position: absolute;
+  top: -20px; right: -10px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ─── CINEMATIC INTRO ─── */
+#intro-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: var(--dark);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+  transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+}
+#intro-overlay.exit {
+  transform: translateY(-100%);
+}
+.intro-particles {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.intro-particle {
+  position: absolute;
+  font-family: 'Space Grotesk', monospace;
+  font-weight: 700;
+  color: rgba(58,91,240,.25);
+  animation: float-particle linear infinite;
+  user-select: none;
+}
+@keyframes float-particle {
+  0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: .6; }
+  100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+}
+.intro-content {
+  position: relative; z-index: 2;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.intro-line {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.intro-line.show { opacity: 1; transform: translateY(0); }
+
+.intro-sub {
+  font-size: .85rem; font-weight: 600; letter-spacing: .18em;
+  color: rgba(255,255,255,.4); text-transform: uppercase;
+}
+.intro-main {
+  font-size: clamp(2.4rem, 7vw, 5rem);
+  font-weight: 900; line-height: 1.1;
+  color: #fff;
+}
+.intro-main span {
+  background: linear-gradient(90deg, var(--blue2), var(--cyan), var(--lime));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.intro-name {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  color: rgba(255,255,255,.55);
+  letter-spacing: .06em;
+}
+.intro-bar-wrap {
+  width: 200px; height: 2px;
+  background: rgba(255,255,255,.1);
+  border-radius: 2px; margin-top: 24px;
+  overflow: hidden;
+}
+.intro-bar {
+  height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  border-radius: 2px;
+  transition: width 1.4s ease;
+}
+.intro-skip {
+  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+  font-size: .75rem; color: rgba(255,255,255,.25);
+  cursor: pointer; letter-spacing: .08em;
+  background: none; border: none; font-family: inherit;
+  transition: color .3s;
+}
+.intro-skip:hover { color: rgba(255,255,255,.6); }
 </style>
 </head>
 <body>
+
+<!-- CINEMATIC INTRO -->
+<div id="intro-overlay">
+  <div class="intro-particles" id="introParticles"></div>
+  <div class="intro-content">
+    <div class="intro-line intro-sub" id="iLine1">קרית שמונה &nbsp;·&nbsp; הצפון</div>
+    <div class="intro-line intro-main" id="iLine2"><span>מתמטיקה</span><br>שמדליקה ילדים</div>
+    <div class="intro-line intro-name" id="iLine3">לידור גבאי</div>
+    <div class="intro-line" id="iLine4" style="transition-delay:.1s">
+      <div class="intro-bar-wrap"><div class="intro-bar" id="introBar"></div></div>
+    </div>
+  </div>
+  <button class="intro-skip" onclick="exitIntro()">לחץ לדילוג ›</button>
+</div>
+
 
 <!-- NAV -->
 <nav id="mainNav">
@@ -1182,10 +1384,10 @@ footer{
       <div class="bento-label">מחויבות לכל<br>תלמיד ותלמיד</div>
       <div class="bento-icon">💪</div>
     </div>
-    <div class="bento-card reveal">
-      <div class="bento-num" data-count="4" data-suffix=" ×">0</div>
-      <div class="bento-label">יחס מדריך-תלמיד<br>מקסימלי בקבוצה</div>
-      <div class="bento-icon">👥</div>
+    <div class="bento-card reveal bento-future">
+      <div class="bento-future-icons">📐 🔤 ✏️</div>
+      <div class="bento-label" style="font-size:.95rem;font-weight:700;margin-top:8px">מתמטיקה עכשיו.<br>אנגלית ולשון — בקרוב.</div>
+      <div style="font-size:.75rem;color:var(--light);margin-top:6px;line-height:1.5">בעתיד נרחיב את המרכז<br>לעוד מקצועות לילדי הצפון</div>
     </div>
   </div>
 </section>
@@ -1575,10 +1777,7 @@ document.getElementById('tmLightbox').addEventListener('click', e => {
   <div class="urgency-item">
     <span class="urgency-text">🔥 <strong>3</strong> הורים שאלו עלינו היום</span>
   </div>
-  <div class="urgency-sep"></div>
-  <div class="urgency-item">
-    <span class="urgency-text">📅 פתיחה מתוכננת: <strong>ספטמבר 2025</strong></span>
-  </div>
+
 </div>
 
 <section id="plans">
@@ -1632,6 +1831,62 @@ document.getElementById('tmLightbox').addEventListener('click', e => {
 </section>
 
 <!-- SURVEY -->
+
+
+<!-- COMMUNITY LETTER -->
+<section id="community">
+  <div class="community-inner">
+    <div class="community-flag">
+      <div class="community-flag-bar flag-blue"></div>
+      <div class="community-flag-bar flag-white"></div>
+      <div class="community-flag-bar flag-blue"></div>
+      <span class="community-eyebrow">מכתב לקהילה</span>
+    </div>
+
+    <h2 class="community-title">
+      לקרית שמונה שלי —<br>
+      <span>אנחנו חוזרים, ובונים.</span>
+    </h2>
+
+    <div class="community-letter" style="position:relative">
+      <span class="community-quote-mark">"</span>
+
+      <p class="community-p">
+        חזרתי לקרית שמונה אחרי סיום התואר באריאל — עם חלומות, עם תוכניות, עם אמונה שאפשר <strong>לבנות פה משהו אחר</strong>.
+        לא הספיק לעבור חודש.
+      </p>
+
+      <div class="community-divider"></div>
+
+      <p class="community-p">
+        פינינו את העיר — אני ואישתי, לבדנו — לטבריה.
+        שם, בתוך הכאוס, מצאתי את עצמי מלמד ילדים מפונים מכל קו העימות.
+        ילדים שהמציאות קטעה להם את הרצף. <em>לא יכולתי להישאר אדיש.</em>
+      </p>
+
+      <p class="community-p">
+        ובאמצע כל זה — <strong>נולדו לי שתי בנות</strong>.
+        מבט אחד עליהן, ורעה בדיוק כמה החינוך באזור שלנו קריטי.
+      </p>
+
+      <div class="community-divider"></div>
+
+      <p class="community-p">
+        חזרנו. לא כי היה קל — <strong>כי זה הבית.</strong>
+        כי הערכים שיש לי היום קיבלתי כאן. כי לא אוותר על המקום שחינך אותי.
+        המרכז הזה לא רק עסק — הוא <em>מחויבות לילדי הצפון</em> שמגיעים לכל הזדמנות.
+      </p>
+
+      <div class="community-sig">
+        <div class="community-sig-dot">ל</div>
+        <div>
+          <div class="community-sig-name">לידור גבאי</div>
+          <div class="community-sig-role">בן קרית שמונה · מייסד מרכז המתמטיקה</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- FAQ SECTION -->
 <section id="faq">
@@ -2117,19 +2372,4 @@ document.querySelectorAll('.why-card').forEach(card=>{
   <div class="wa-tooltip">כתבו לי בוואטסאפ 💬</div>
   <a class="wa-btn" href="https://wa.me/972544864131?text=%D7%94%D7%99%D7%99%20%D7%9C%D7%99%D7%93%D7%95%D7%A8%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%90%D7%AA%20%D7%94%D7%90%D7%AA%D7%A8%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%95%D7%93" target="_blank" rel="noopener">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-    </svg>
-  </a>
-</div>
-
-<script>
-// FAQ Toggle
-function toggleFaq(btn) {
-  const item = btn.closest('.faq-item');
-  const isOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-  if (!isOpen) item.classList.add('open');
-}
-</script>
-</body>
-</html>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.19
