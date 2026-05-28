@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/lidor_v2.html" }
+    { "source": "/", "destination": "/lidor_v2.html" },
+    { "source": "/lidor.png", "destination": "/lidor.png.png" }
   ]
 }
