@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>שורשים | פורטל</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --dk:#06091E;--dk2:#0D1340;--bl:#3A5BF0;--bl2:#6B8EFF;
+  --cy:#00D4E8;--li:#C1FF00;--rd:#FF4D6D;--or:#FF9A3C;
+  --gr:#2ECC71;--tx:#12172E;--mid:#4A5178;--lgt:#8890B5;
+  --bg:#F4F6FF;--wh:#fff;--brd:rgba(58,91,240,0.12);
+  --glass:rgba(255,255,255,0.7);
+  --shadow:0 4px 24px rgba(58,91,240,0.08);
+  --shadow-lg:0 12px 48px rgba(58,91,240,0.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Rubik',sans-serif;background:var(--bg);color:var(--tx);overflow-x:hidden;min-height:100vh}
+button{font-family:'Rubik',sans-serif;cursor:pointer}
+input,select,textarea{font-family:'Rubik',sans-serif}
+a{text-decoration:none}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bl);border-radius:3px}
+
+/* ═══════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════ */
+#loginScreen{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--dk);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:0;
+}
+#loginScreen .aurora{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#loginScreen .blob{position:absolute;border-radius:50%;filter:blur(80px);animation:bfloat 8s ease-in-out infinite alternate}
+#loginScreen .b1{width:500px;height:500px;background:radial-gradient(circle,rgba(58,91,240,.3),transparent 70%);top:-100px;right:-100px}
+#loginScreen .b2{width:400px;height:400px;background:radial-gradient(circle,rgba(0,212,232,.2),transparent 70%);bottom:-50px;left:10%;animation-duration:11s;animation-delay:-3s}
+@keyframes bfloat{from{transform:translate(0,0)}to{transform:translate(30px,25px)}}
+
+.login-box{
+  position:relative;z-index:2;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(20px);
+  border-radius:28px;
+  padding:48px 44px;
+  width:100%;max-width:440px;
+  animation:fadeUp .6s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo img{height:56px;margin-bottom:12px}
+.login-logo h1{color:#fff;font-size:1.8rem;font-weight:900}
+.login-logo p{color:rgba(255,255,255,.4);font-size:.85rem;margin-top:4px}
+
+.login-tabs{display:flex;background:rgba(255,255,255,.06);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px}
+.login-tab{flex:1;padding:10px;border:none;background:none;color:rgba(255,255,255,.5);font-size:.85rem;font-weight:600;border-radius:9px;transition:all .2s}
+.login-tab.active{background:var(--bl);color:#fff;box-shadow:0 4px 16px rgba(58,91,240,.4)}
+
+.lf-group{margin-bottom:20px}
+.lf-label{display:block;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:600;margin-bottom:8px}
+.lf-input{
+  width:100%;padding:14px 16px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;color:#fff;font-size:.95rem;
+  transition:border-color .2s;outline:none;
+}
+.lf-input:focus{border-color:var(--bl)}
+.lf-input::placeholder{color:rgba(255,255,255,.3)}
+
+.login-btn{
+  width:100%;padding:16px;
+  background:linear-gradient(135deg,var(--bl),var(--cy));
+  color:#fff;font-weight:700;font-size:1rem;
+  border:none;border-radius:14px;
+  box-shadow:0 8px 28px rgba(58,91,240,.4);
+  transition:transform .2s,box-shadow .2s;
+  margin-top:8px;
+}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(58,91,240,.5)}
+.login-err{color:#FF4D6D;font-size:.82rem;text-align:center;margin-top:12px;min-height:20px}
+
+/* ═══════════════════════════════
+   APP SHELL (after login)
+═══════════════════════════════ */
+#app{display:none;min-height:100vh}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  position:fixed;top:0;right:0;bottom:0;
+  width:260px;
+  background:var(--wh);
+  border-left:1px solid var(--brd);
+  display:flex;flex-direction:column;
+  z-index:100;
+  transition:transform .3s ease;
+  box-shadow: 2px 0 24px rgba(58,91,240,0.06);
+}
+.sb-logo{padding:24px 20px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px}
+.sb-logo img{height:36px}
+.sb-logo-text{font-size:1rem;font-weight:800;color:var(--tx)}
+.sb-logo-sub{font-size:.7rem;color:var(--lgt);font-weight:400}
+
+.sb-user{padding:16px 20px;background:var(--bg);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px}
+.sb-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;flex-shrink:0}
+.sb-user-name{font-size:.88rem;font-weight:600;color:var(--tx)}
+.sb-user-role{font-size:.72rem;color:var(--lgt)}
+
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.sb-section{font-size:.68rem;font-weight:700;letter-spacing:.1em;color:var(--lgt);padding:12px 10px 6px;text-transform:uppercase}
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:10px;
+  font-size:.88rem;font-weight:500;color:var(--mid);
+  cursor:pointer;transition:all .2s;margin-bottom:2px;
+}
+.sb-item:hover{background:var(--bg);color:var(--tx)}
+.sb-item.active{background:rgba(58,91,240,.08);color:var(--bl);font-weight:700}
+.sb-item .icon{font-size:1.1rem;width:20px;text-align:center}
+.sb-item .badge{margin-right:auto;background:var(--rd);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:100px}
+
+.sb-footer{padding:16px 20px;border-top:1px solid var(--brd)}
+.sb-logout{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:.85rem;font-weight:500;color:var(--lgt);cursor:pointer;transition:all .2s;background:none;border:none;width:100%}
+.sb-logout:hover{background:rgba(255,77,109,.08);color:var(--rd)}
+
+/* ── MAIN CONTENT ── */
+#main{
+  margin-right:260px;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+}
+.page-header{
+  padding:24px 32px;
+  background:var(--wh);
+  border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.page-title{font-size:1.3rem;font-weight:800;color:var(--tx)}
+.page-sub{font-size:.82rem;color:var(--lgt);margin-top:2px}
+.page-actions{display:flex;gap:10px;align-items:center}
+
+.content{padding:28px 32px;flex:1}
+
+/* ── CARDS ── */
+.card{background:var(--wh);border:1px solid var(--brd);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.card-sm{background:var(--wh);border:1px solid var(--brd);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi{background:var(--wh);border:1px solid var(--brd);border-radius:16px;padding:20px;box-shadow:var(--shadow);transition:transform .2s}
+.kpi:hover{transform:translateY(-2px)}
+.kpi-val{font-size:2rem;font-weight:900;color:var(--tx);line-height:1}
+.kpi-label{font-size:.78rem;color:var(--lgt);margin-top:6px;font-weight:500}
+.kpi-change{font-size:.75rem;font-weight:600;margin-top:8px}
+.kpi-change.up{color:var(--gr)}
+.kpi-change.down{color:var(--rd)}
+.kpi-icon{font-size:1.6rem;margin-bottom:8px}
+
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;text-align:right;font-size:.75rem;font-weight:700;color:var(--lgt);border-bottom:1px solid var(--brd);white-space:nowrap}
+td{padding:12px 14px;font-size:.88rem;border-bottom:1px solid rgba(58,91,240,.05);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:700;border:none;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--bl);color:#fff;box-shadow:0 4px 16px rgba(58,91,240,.3)}
+.btn-primary:hover{background:#2a4bd0;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--mid);border:1px solid var(--brd)}
+.btn-ghost:hover{background:var(--bg);color:var(--tx)}
+.btn-danger{background:rgba(255,77,109,.1);color:var(--rd);border:1px solid rgba(255,77,109,.2)}
+.btn-danger:hover{background:var(--rd);color:#fff}
+.btn-success{background:rgba(46,204,113,.1);color:var(--gr);border:1px solid rgba(46,204,113,.2)}
+.btn-success:hover{background:var(--gr);color:#fff}
+.btn-sm{padding:6px 12px;font-size:.78rem;border-radius:8px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
+.badge-blue{background:rgba(58,91,240,.1);color:var(--bl)}
+.badge-green{background:rgba(46,204,113,.12);color:#27ae60}
+.badge-red{background:rgba(255,77,109,.12);color:var(--rd)}
+.badge-orange{background:rgba(255,154,60,.12);color:var(--or)}
+.badge-gray{background:var(--bg);color:var(--mid)}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(6,9,30,.6);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--wh);border-radius:20px;padding:32px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:fadeUp .3s ease}
+.modal-h{font-size:1.2rem;font-weight:800;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:1.4rem;color:var(--lgt);cursor:pointer;padding:4px;line-height:1}
+.modal-close:hover{color:var(--tx)}
+
+/* ── FORMS ── */
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:.8rem;font-weight:700;color:var(--mid);margin-bottom:6px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid var(--brd);border-radius:10px;font-size:.9rem;outline:none;transition:border-color .2s;background:#fff;color:var(--tx)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--bl)}
+.fg textarea{resize:vertical;min-height:80px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── ATTENDANCE GRID ── */
+.att-grid{display:flex;flex-direction:column;gap:12px}
+.att-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:12px}
+.att-name{flex:1;font-size:.9rem;font-weight:600}
+.att-toggle{display:flex;gap:8px}
+.att-btn{width:36px;height:36px;border-radius:8px;border:none;font-size:.9rem;cursor:pointer;font-weight:700;transition:all .2s}
+.att-btn.present{background:rgba(46,204,113,.15);color:var(--gr)}
+.att-btn.absent{background:rgba(255,77,109,.15);color:var(--rd)}
+.att-btn.active-present{background:var(--gr);color:#fff}
+.att-btn.active-absent{background:var(--rd);color:#fff}
+.att-fields{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.att-score{width:64px;padding:6px 8px;border:1.5px solid var(--brd);border-radius:8px;font-size:.85rem;text-align:center;outline:none}
+.att-note{flex:1;min-width:120px;padding:6px 10px;border:1.5px solid var(--brd);border-radius:8px;font-size:.82rem;outline:none}
+
+/* ── PROGRESS BAR ── */
+.prog-bar{height:6px;background:var(--bg);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--bl),var(--cy));transition:width .8s ease}
+
+/* ── RISK CARD ── */
+.risk-card{display:flex;align-items:center;gap:14px;padding:14px;background:rgba(255,77,109,.06);border:1px solid rgba(255,77,109,.2);border-radius:12px;margin-bottom:10px}
+.risk-icon{font-size:1.4rem}
+.risk-name{font-size:.9rem;font-weight:700;color:var(--tx)}
+.risk-reason{font-size:.78rem;color:var(--lgt)}
+
+/* ── PARENT PORTAL ── */
+.parent-hero{background:linear-gradient(135deg,var(--dk),var(--dk2));border-radius:20px;padding:32px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden}
+.parent-hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:24px 24px}
+.parent-child-name{font-size:1.8rem;font-weight:900;position:relative}
+.parent-child-group{font-size:.85rem;color:rgba(255,255,255,.5);margin-top:4px;position:relative}
+.parent-stats{display:flex;gap:24px;margin-top:24px;position:relative}
+.parent-stat{text-align:center}
+.parent-stat-val{font-size:1.8rem;font-weight:900}
+.parent-stat-lbl{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:2px}
+
+/* ── STUDENT PORTAL ── */
+.hw-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:8px}
+.hw-cb{width:20px;height:20px;border-radius:5px;border:2px solid var(--brd);cursor:pointer;transition:all .2s;flex-shrink:0}
+.hw-cb.done{background:var(--gr);border-color:var(--gr)}
+.hw-text{font-size:.88rem;flex:1}
+.hw-text.done{text-decoration:line-through;color:var(--lgt)}
+.hw-date{font-size:.72rem;color:var(--lgt)}
+
+/* ── CALENDAR ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-day{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;position:relative}
+.cal-day.present{background:rgba(46,204,113,.15);color:#27ae60}
+.cal-day.absent{background:rgba(255,77,109,.1);color:var(--rd)}
+.cal-day.no-lesson{background:var(--bg);color:var(--lgt)}
+.cal-day.today{ring:2px solid var(--bl)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:12px;margin-bottom:20px;width:fit-content}
+.tab{padding:8px 18px;border-radius:9px;font-size:.85rem;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;border:none;background:none}
+.tab.active{background:var(--wh);color:var(--tx);box-shadow:var(--shadow)}
+
+/* ── WEEK SCHEDULE ── */
+.week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.week-col{}
+.week-day-header{font-size:.78rem;font-weight:700;color:var(--lgt);text-align:center;padding:8px;background:var(--bg);border-radius:8px;margin-bottom:8px}
+.week-lesson{background:var(--wh);border:1px solid var(--brd);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;border-right:3px solid var(--bl)}
+.week-lesson:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.week-lesson .wl-group{font-size:.78rem;color:var(--bl);font-weight:700}
+.week-lesson .wl-time{font-size:.82rem;color:var(--mid);margin-top:2px}
+.week-lesson .wl-topic{font-size:.82rem;color:var(--tx);margin-top:4px;font-weight:500}
+
+/* ── LOADING ── */
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:16px;color:var(--lgt)}
+.spinner{width:36px;height:36px;border:3px solid var(--brd);border-top-color:var(--bl);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:24px;z-index:999;
+  background:var(--tx);color:#fff;
+  padding:12px 20px;border-radius:12px;
+  font-size:.88rem;font-weight:600;
+  transform:translateY(80px);opacity:0;
+  transition:all .3s ease;pointer-events:none;
+  max-width:320px;
+}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{background:var(--gr)}
+#toast.error{background:var(--rd)}
+
+/* ── MOBILE ── */
+#menuToggle{display:none;position:fixed;top:16px;left:16px;z-index:200;background:var(--bl);color:#fff;border:none;border-radius:10px;padding:10px 12px;font-size:1.1rem}
+@media(max-width:900px){
+  #sidebar{transform:translateX(260px)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-right:0}
+  #menuToggle{display:block}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .week-grid{grid-template-columns:repeat(2,1fr)}
+  .fg-row{grid-template-columns:1fr}
+}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 24px;color:var(--lgt)}
+.empty .ei{font-size:3rem;margin-bottom:12px}
+.empty p{font-size:.9rem}
+
+/* ── CHART CONTAINER ── */
+.chart-wrap{position:relative;height:220px}
+
+/* ── ACCOUNT MGMT ── */
+.acc-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:12px;margin-bottom:8px}
+.acc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0}
+.acc-info{flex:1}
+.acc-name{font-size:.9rem;font-weight:700}
+.acc-email{font-size:.75rem;color:var(--lgt)}
+</style>
+</head>
+<body>
+
+<button id="menuToggle" onclick="toggleMenu()">☰</button>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="aurora"><div class="blob b1"></div><div class="blob b2"></div></div>
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="font-size:2.4rem;font-weight:900;color:#fff;letter-spacing:-1px">שורשים</div>
+      <p>כניסה לפורטל</p>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setLoginTab('login')">כניסה</button>
+      <button class="login-tab" onclick="setLoginTab('forgot')">שכחתי סיסמה</button>
+    </div>
+    <div id="loginForm">
+      <div class="lf-group">
+        <label class="lf-label">אימייל</label>
+        <input class="lf-input" type="email" id="loginEmail" placeholder="your@email.com"/>
+      </div>
+      <div class="lf-group">
+        <label class="lf-label">סיסמה</label>
+        <input class="lf-input" type="password" id="loginPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="login-btn" onclick="doLogin()" id="loginBtn">כניסה →</button>
+      <div class="login-err" id="loginErr"></div>
+    </div>
+    <div id="forgotForm" style="display:none">
+      <div class="lf-group">
+        <label class="lf-label">אימייל</label>
+        <input class="lf-input" type="email" id="forgotEmail" placeholder="your@email.com"/>
+      </div>
+      <button class="login-btn" onclick="doForgot()">שלח קישור איפוס →</button>
+      <div class="login-err" id="forgotMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div style="font-size:1.3rem;font-weight:900;color:var(--bl)">שורשים</div>
+      <div>
+        <div class="sb-logo-text">פורטל</div>
+        <div class="sb-logo-sub" id="sb-role-label">מנהל</div>
+      </div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-avatar" style="background:var(--bl)">?</div>
+      <div>
+        <div class="sb-user-name" id="sb-name">טוען...</div>
+        <div class="sb-user-role" id="sb-email"></div>
+      </div>
+    </div>
+    <div class="sb-nav" id="sb-nav"></div>
+    <div class="sb-footer">
+      <button class="sb-logout" onclick="doLogout()">🚪 יציאה</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="pageTitle">לוח בקרה</div>
+        <div class="page-sub" id="pageSub"></div>
+      </div>
+      <div class="page-actions" id="pageActions"></div>
+    </div>
+    <div class="content" id="content">
+      <div class="loading"><div class="spinner"></div><span>טוען...</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+const SU='https://iuzghbbccmiucixoayfz.supabase.co';
+const SK='sb_publishable_Dqb9AJaCyVEGBiXLqEmwCw_Xy-XHjRP';
+const sb=supabase.createClient(SU,SK);
+
+// ─── STATE ───
+let S={user:null,profile:null,data:{}};
+let currentView='';
+
+// ─── INIT ───
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){showLogin();return;}
+  await loadProfile(session.user);
+}
+
+async function loadProfile(user){
+  S.user=user;
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  S.profile=p||{role:'student',full_name:user.email};
+  hideLogin();
+  renderShell();
+  await routeToPortal();
+}
+
+// ─── AUTH ───
+function setLoginTab(t){
+  document.querySelectorAll('.login-tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='forgot'?1:0)));
+  document.getElementById('loginForm').style.display=t==='login'?'block':'none';
+  document.getElementById('forgotForm').style.display=t==='forgot'?'block':'none';
+}
+
+async function doLogin(){
+  const em=document.getElementById('loginEmail').value.trim();
+  const pw=document.getElementById('loginPwd').value;
+  const btn=document.getElementById('loginBtn');
+  const err=document.getElementById('loginErr');
+  if(!em||!pw){err.textContent='נא למלא אימייל וסיסמה';return;}
+  btn.textContent='מתחבר...';btn.disabled=true;err.textContent='';
+  const {data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(error){err.textContent='אימייל או סיסמה שגויים';btn.textContent='כניסה →';btn.disabled=false;return;}
+  await loadProfile(data.user);
+}
+
+async function doForgot(){
+  const em=document.getElementById('forgotEmail').value.trim();
+  const msg=document.getElementById('forgotMsg');
+  if(!em){msg.textContent='נא להזין אימייל';return;}
+  await sb.auth.resetPasswordForEmail(em,{redirectTo:window.location.origin+window.location.pathname});
+  msg.textContent='✓ קישור איפוס נשלח לאימייל שלך';msg.style.color='#2ECC71';
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  location.reload();
+}
+
+function showLogin(){document.getElementById('loginScreen').style.display='flex';}
+function hideLogin(){document.getElementById('loginScreen').style.display='none';document.getElementById('app').style.display='flex';}
+
+// ─── SHELL ───
+function renderShell(){
+  const p=S.profile;
+  const roleLabel={admin:'מנהל / מנטור',parent:'הורה',student:'תלמיד'}[p.role]||p.role;
+  const name=p.full_name||S.user.email;
+  document.getElementById('sb-role-label').textContent=roleLabel;
+  document.getElementById('sb-name').textContent=name;
+  document.getElementById('sb-email').textContent=S.user.email;
+  const av=document.getElementById('sb-avatar');
+  av.textContent=name.charAt(0).toUpperCase();
+  av.style.background=p.avatar_color||'#3A5BF0';
+
+  const nav=document.getElementById('sb-nav');
+  if(p.role==='admin') nav.innerHTML=adminNav();
+  else if(p.role==='parent') nav.innerHTML=parentNav();
+  else nav.innerHTML=studentNav();
+}
+
+function adminNav(){return`
+  <div class="sb-section">ניהול</div>
+  <div class="sb-item active" onclick="go('dashboard')" id="nav-dashboard"><span class="icon">🏠</span>לוח בקרה</div>
+  <div class="sb-item" onclick="go('groups')" id="nav-groups"><span class="icon">👥</span>קבוצות</div>
+  <div class="sb-item" onclick="go('students')" id="nav-students"><span class="icon">🎒</span>תלמידים</div>
+  <div class="sb-item" onclick="go('schedule')" id="nav-schedule"><span class="icon">📅</span>לוח שבועי</div>
+  <div class="sb-item" onclick="go('reports')" id="nav-reports"><span class="icon">📄</span>דוחות</div>
+  <div class="sb-section">מערכת</div>
+  <div class="sb-item" onclick="go('subscriptions')" id="nav-subscriptions"><span class="icon">💳</span>מנויים</div>
+  <div class="sb-item" onclick="go('resources')" id="nav-resources"><span class="icon">📁</span>משאבים</div>
+  <div class="sb-item" onclick="go('accounts')" id="nav-accounts"><span class="icon">🔑</span>ניהול חשבונות</div>
+`;}
+
+function parentNav(){return`
+  <div class="sb-section">הילד שלי</div>
+  <div class="sb-item active" onclick="go('p-dashboard')" id="nav-p-dashboard"><span class="icon">🏠</span>סיכום</div>
+  <div class="sb-item" onclick="go('p-attendance')" id="nav-p-attendance"><span class="icon">📋</span>נוכחות</div>
+  <div class="sb-item" onclick="go('p-progress')" id="nav-p-progress"><span class="icon">📈</span>התקדמות</div>
+  <div class="sb-item" onclick="go('p-homework')" id="nav-p-homework"><span class="icon">📝</span>שיעורי בית</div>
+  <div class="sb-item" onclick="go('p-report')" id="nav-p-report"><span class="icon">📄</span>דוח התקדמות</div>
+`;}
+
+function studentNav(){return`
+  <div class="sb-section">אזור אישי</div>
+  <div class="sb-item active" onclick="go('s-dashboard')" id="nav-s-dashboard"><span class="icon">🏠</span>הדף שלי</div>
+  <div class="sb-item" onclick="go('s-schedule')" id="nav-s-schedule"><span class="icon">📅</span>השיעורים שלי</div>
+  <div class="sb-item" onclick="go('s-progress')" id="nav-s-progress"><span class="icon">📈</span>ההתקדמות שלי</div>
+  <div class="sb-item" onclick="go('s-homework')" id="nav-s-homework"><span class="icon">📝</span>שיעורי בית</div>
+`;}
+
+// ─── ROUTER ───
+async function go(view){
+  currentView=view;
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
+  const navEl=document.getElementById('nav-'+view);
+  if(navEl)navEl.classList.add('active');
+  closeSidebar();
+  document.getElementById('content').innerHTML='<div class="loading"><div class="spinner"></div><span>טוען...</span></div>';
+  await routeToPortal(view);
+}
+
+async function routeToPortal(view){
+  const role=S.profile.role;
+  const v=view||currentView||(role==='admin'?'dashboard':role==='parent'?'p-dashboard':'s-dashboard');
+  currentView=v;
+
+  if(role==='admin'){
+    if(v==='dashboard') await renderAdminDashboard();
+    else if(v==='groups') await renderGroups();
+    else if(v==='students') await renderStudents();
+    else if(v==='schedule') await renderSchedule();
+    else if(v==='reports') await renderReports();
+    else if(v==='subscriptions') await renderSubscriptions();
+    else if(v==='resources') await renderResources();
+    else if(v==='accounts') await renderAccounts();
+  } else if(role==='parent'){
+    await loadParentData();
+    if(v==='p-dashboard') renderParentDashboard();
+    else if(v==='p-attendance') renderParentAttendance();
+    else if(v==='p-progress') renderParentProgress();
+    else if(v==='p-homework') renderParentHomework();
+    else if(v==='p-report') renderParentReport();
+  } else {
+    await loadStudentData();
+    if(v==='s-dashboard') renderStudentDashboard();
+    else if(v==='s-schedule') renderStudentSchedule();
+    else if(v==='s-progress') renderStudentProgress();
+    else if(v==='s-homework') renderStudentHomework();
+  }
+}
+
+// ─── DATA LOAD ───
+async function loadAll(){
+  const [g,st,l,a,f,r]=await Promise.all([
+    sb.from('groups').select('*').order('created_at'),
+    sb.from('students').select('*').eq('active',true).order('name'),
+    sb.from('lessons').select('*').order('lesson_date,start_time'),
+    sb.from('attendance').select('*'),
+    sb.from('files').select('*').order('uploaded_at',{ascending:false}),
+    sb.from('resources').select('*').order('created_at',{ascending:false}),
+  ]);
+  S.data={groups:g.data||[],students:st.data||[],lessons:l.data||[],attendance:a.data||[],files:f.data||[],resources:r.data||[]};
+}
+
+async function loadParentData(){
+  const uid=S.user.id;
+  const {data:children}=await sb.from('students').select('*').eq('parent_user_id',uid);
+  if(!children||!children.length){S.data={children:[],lessons:[],attendance:[]};return;}
+  const ids=children.map(c=>c.id);
+  const gids=[...new Set(children.map(c=>c.group_id).filter(Boolean))];
+  const [l,a]= await Promise.all([
+    gids.length?sb.from('lessons').select('*').in('group_id',gids).order('lesson_date,start_time'):Promise.resolve({data:[]}),
+    sb.from('attendance').select('*').in('student_id',ids),
+  ]);
+  const {data:groups}=await sb.from('groups').select('*').in('id',gids);
+  S.data={children,lessons:l.data||[],attendance:a.data||[],groups:groups||[]};
+}
+
+async function loadStudentData(){
+  const uid=S.user.id;
+  const {data:st}=await sb.from('students').select('*').eq('user_id',uid).single();
+  if(!st){S.data={student:null,lessons:[],attendance:[]};return;}
+  const [l,a]=await Promise.all([
+    st.group_id?sb.from('lessons').select('*').eq('group_id',st.group_id).order('lesson_date,start_time'):Promise.resolve({data:[]}),
+    sb.from('attendance').select('*').eq('student_id',st.id),
+  ]);
+  const {data:grp}=st.group_id?await sb.from('groups').select('*').eq('id',st.group_id).single():{data:null};
+  S.data={student:st,lessons:l.data||[],attendance:a.data||[],group:grp};
+}
+
+// ─── HELPERS ───
+function setPage(title,sub='',actions=''){
+  document.getElementById('pageTitle').textContent=title;
+  document.getElementById('pageSub').textContent=sub;
+  document.getElementById('pageActions').innerHTML=actions;
+}
+
+function setContent(html){document.getElementById('content').innerHTML=html;}
+
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='show '+(type||'');
+  setTimeout(()=>t.className='',3000);
+}
+
+function openModal(html){
+  document.getElementById('modalBox').innerHTML=html;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');}
+
+function fmt(d){if(!d)return'—';const dd=new Date(d);return dd.toLocaleDateString('he-IL');}
+function fmtDate(d){if(!d)return'';return new Date(d).toISOString().split('T')[0];}
+function today(){return new Date().toISOString().split('T')[0];}
+function grpName(id){return (S.data.groups||[]).find(g=>g.id===id)?.name||'—';}
+function stName(id){return (S.data.students||[]).find(s=>s.id===id)?.name||'—';}
+
+function attRate(sid){if(!S.data.attendance)return 0;
+  const a=S.data.attendance?.filter(a=>a.student_id===sid)||[];
+  if(!a.length)return 0;
+  return Math.round(a.filter(a=>a.present).length/a.length*100);
+}
+function avgScore(sid){if(!S.data.attendance)return null;
+  const sc=S.data.attendance?.filter(a=>a.student_id===sid&&a.score!=null).map(a=>a.score)||[];
+  if(!sc.length)return null;
+  return Math.round(sc.reduce((a,b)=>a+b,0)/sc.length);
+}
+function riskLevel(sid){if(!S.data.attendance)return "low";
+  const rate=attRate(sid);
+  const sc=avgScore(sid);
+  if(rate<60)return 'high';
+  if(rate<80||sc<60)return 'medium';
+  return 'low';
+}
+
+// COLOR PICKER for avatars
+const COLORS=['#3A5BF0','#00D4E8','#C1FF00','#FF4D6D','#FF9A3C','#2ECC71','#9B59B6','#E67E22'];
+function rndColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
+</script>
+<script>
+// ══════════════════════════════════════
+//  ADMIN — DASHBOARD
+// ══════════════════════════════════════
+async function renderAdminDashboard(){
+  await loadAll();
+  const D=S.data;
+  setPage('לוח בקרה','סיכום יומי ומדדי אימפקט');
+
+  const todayStr=today();
+  const todayLessons=D.lessons.filter(l=>l.lesson_date===todayStr);
+  const atRisk=D.students.filter(s=>riskLevel(s.id)==='high');
+  const totalAtt=D.attendance.length?Math.round(D.attendance.filter(a=>a.present).length/D.attendance.length*100):0;
+  const scores=D.attendance.filter(a=>a.score!=null).map(a=>a.score);
+  const avgSc=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
+
+  setContent(`
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-icon">🎒</div><div class="kpi-val">${D.students.length}</div><div class="kpi-label">תלמידים פעילים</div></div>
+    <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val">${D.groups.length}</div><div class="kpi-label">קבוצות</div></div>
+    <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val">${totalAtt}%</div><div class="kpi-label">נוכחות ממוצעת</div><div class="prog-bar" style="margin-top:8px"><div class="prog-fill" style="width:${totalAtt}%"></div></div></div>
+    <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-val">${avgSc??'—'}</div><div class="kpi-label">ציון ממוצע</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="font-size:1rem;font-weight:700">שיעורים היום</h3>
+        <span class="badge badge-blue">${todayLessons.length} שיעורים</span>
+      </div>
+      ${todayLessons.length?todayLessons.map(l=>{
+        const g=D.groups.find(g=>g.id===l.group_id);
+        const att=D.attendance.filter(a=>a.lesson_id===l.id);
+        const pres=att.filter(a=>a.present).length;
+        return`<div class="week-lesson" onclick="openLessonModal('${l.id}')">
+          <div class="wl-group">${g?.name||'—'}</div>
+          <div class="wl-time">${l.start_time||''} ${l.duration?'· '+l.duration+' ד׳':''}</div>
+          ${l.topic?`<div class="wl-topic">${l.topic}</div>`:''}
+          <div style="font-size:.75rem;color:var(--lgt);margin-top:4px">${pres}/${D.students.filter(s=>s.group_id===l.group_id).length} נוכחים</div>
+        </div>`;}).join(''):'<div class="empty"><div class="ei">📅</div><p>אין שיעורים היום</p></div>'}
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="font-size:1rem;font-weight:700">⚠️ תלמידים בסיכון</h3>
+        <span class="badge badge-red">${atRisk.length}</span>
+      </div>
+      ${atRisk.length?atRisk.map(s=>`
+        <div class="risk-card">
+          <div class="risk-icon">🔴</div>
+          <div style="flex:1">
+            <div class="risk-name">${s.name}</div>
+            <div class="risk-reason">נוכחות: ${attRate(s.id)}% · ${grpName(s.group_id)}</div>
+          </div>
+          <button class="btn btn-sm btn-ghost" onclick="openWhatsApp('${s.parent_phone||s.phone||''}','${s.name}')">📱</button>
+        </div>`).join(''):'<div class="empty"><div class="ei">✅</div><p>אין תלמידים בסיכון</p></div>'}
+    </div>
+
+    <div class="card" style="grid-column:1/-1">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:16px">התפלגות נוכחות לפי קבוצה</h3>
+      <div class="chart-wrap"><canvas id="grpChart"></canvas></div>
+    </div>
+  </div>`);
+
+  // Chart
+  const ctx=document.getElementById('grpChart')?.getContext('2d');
+  if(ctx){
+    const labels=D.groups.map(g=>g.name);
+    const rates=D.groups.map(g=>{
+      const gStudents=D.students.filter(s=>s.group_id===g.id).map(s=>s.id);
+      const gAtt=D.attendance.filter(a=>gStudents.includes(a.student_id));
+      return gAtt.length?Math.round(gAtt.filter(a=>a.present).length/gAtt.length*100):0;
+    });
+    new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:rates,backgroundColor:'rgba(58,91,240,.7)',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}});
+  }
+}
+
+// ══════════════════════════════════════
+//  ADMIN — GROUPS
+// ══════════════════════════════════════
+async function renderGroups(){
+  await loadAll();const D=S.data;
+  setPage('קבוצות','ניהול קבוצות לימוד',`<button class="btn btn-primary" onclick="openGroupModal()">+ קבוצה חדשה</button>`);
+  setContent(`
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+  ${D.groups.length?D.groups.map(g=>{
+    const stCount=D.students.filter(s=>s.group_id===g.id).length;
+    const rate=D.students.filter(s=>s.group_id===g.id).length?
+      Math.round(D.attendance.filter(a=>D.students.filter(s=>s.group_id===g.id).map(s=>s.id).includes(a.student_id)&&a.present).length/
+      Math.max(1,D.attendance.filter(a=>D.students.filter(s=>s.group_id===g.id).map(s=>s.id).includes(a.student_id)).length)*100):0;
+    return`<div class="card" style="border-right:4px solid ${g.color||'var(--bl)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:1.1rem;font-weight:800">${g.name}</div>
+          ${g.description?`<div style="font-size:.8rem;color:var(--lgt);margin-top:4px">${g.description}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-ghost" onclick="openGroupModal('${g.id}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="delGroup('${g.id}')">🗑️</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--brd)">
+        <div style="text-align:center"><div style="font-size:1.4rem;font-weight:900">${stCount}</div><div style="font-size:.7rem;color:var(--lgt)">תלמידים</div></div>
+        <div style="text-align:center"><div style="font-size:1.4rem;font-weight:900">${rate}%</div><div style="font-size:.7rem;color:var(--lgt)">נוכחות</div></div>
+        <div style="text-align:center"><div style="font-size:1.4rem;font-weight:900">${g.lessons_per_month||8}</div><div style="font-size:.7rem;color:var(--lgt)">שיעורים/חודש</div></div>
+      </div>
+      ${g.schedule_days?`<div style="font-size:.78rem;color:var(--mid);margin-top:10px">📅 ${g.schedule_days} · ${g.schedule_time||''}</div>`:''}
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%" onclick="go('schedule')">פתח לוח שבועי →</button>
+    </div>`;}).join(''):'<div class="empty"><div class="ei">👥</div><p>אין קבוצות עדיין</p></div>'}
+  </div>`);
+}
+
+function openGroupModal(id){
+  const g=id?S.data.groups.find(x=>x.id===id):{};
+  const DAYS=['ראשון','שני','שלישי','רביעי','חמישי'];
+  const selDays=(g.schedule_days||'').split(',').filter(Boolean);
+  openModal(`
+  <div class="modal-h">${id?'עריכת':'קבוצה חדשה'} <button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="fg"><label>שם הקבוצה</label><input id="gName" value="${g.name||''}"/></div>
+  <div class="fg"><label>תיאור</label><input id="gDesc" value="${g.description||''}"/></div>
+  <div class="fg-row">
+    <div class="fg"><label>שיעורים לחודש</label><input id="gLpm" type="number" value="${g.lessons_per_month||8}"/></div>
+    <div class="fg"><label>שעת שיעור</label><input id="gTime" type="time" value="${g.schedule_time||''}"/></div>
+  </div>
+  <div class="fg"><label>ימים קבועים</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+      ${DAYS.map(d=>`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.85rem">
+        <input type="checkbox" value="${d}" ${selDays.includes(d)?'checked':''} class="day-cb"/> ${d}</label>`).join('')}
+    </div>
+  </div>
+  <div class="fg"><label>צבע</label><input id="gColor" type="color" value="${g.color||'#3A5BF0'}" style="width:100%;height:44px;padding:2px;border-radius:8px;border:1.5px solid var(--brd)"/></div>
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <button class="btn btn-primary" style="flex:1" onclick="saveGroup(${id?`'${id}'`:'null'})">שמור</button>
+    <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
+  </div>`);
+}
+
+async function saveGroup(id){
+  const days=[...document.querySelectorAll('.day-cb:checked')].map(c=>c.value).join(',');
+  const obj={name:document.getElementById('gName').value.trim(),description:document.getElementById('gDesc').value.trim(),lessons_per_month:parseInt(document.getElementById('gLpm').value)||8,schedule_time:document.getElementById('gTime').value,schedule_days:days,color:document.getElementById('gColor').value};
+  if(!obj.name){toast('שם הקבוצה חובה','error');return;}
+  if(id){await sb.from('groups').update(obj).eq('id',id);}
+  else{await sb.from('groups').insert(obj);}
+  closeModal();toast('✓ קבוצה נשמרה','success');await renderGroups();
+}
+
+async function delGroup(id){
+  if(!confirm('למחוק קבוצה זו?'))return;
+  await sb.from('groups').delete().eq('id',id);
+  toast('קבוצה נמחקה');await renderGroups();
+}
+</script>
+<script>
+// ══════════════════════════════════════
+//  ADMIN — STUDENTS
+// ══════════════════════════════════════
+async function renderStudents(){
+  await loadAll();const D=S.data;
+  setPage('תלמידים',`${D.students.length} תלמידים פעילים`,`<button class="btn btn-primary" onclick="openStudentModal()">+ תלמיד חדש</button>`);
+  setContent(`
+  <div class="card">
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <input id="stSearch" placeholder="חיפוש תלמיד..." style="flex:1;padding:10px 14px;border:1.5px solid var(--brd);border-radius:10px;font-size:.9rem;outline:none" oninput="filterStudents()"/>
+      <select id="stGrpFilter" style="padding:10px 14px;border:1.5px solid var(--brd);border-radius:10px;font-size:.9rem;outline:none" onchange="filterStudents()">
+        <option value="">כל הקבוצות</option>
+        ${D.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table id="stTable">
+        <thead><tr><th>שם</th><th>קבוצה</th><th>כיתה</th><th>נוכחות</th><th>ציון ממוצע</th><th>מנוי</th><th>סטטוס</th><th>פעולות</th></tr></thead>
+        <tbody id="stBody">${renderStudentRows(D.students)}</tbody>
+      </table>
+    </div>
+  </div>`);
+}
+
+function renderStudentRows(students){
+  return students.map(s=>{
+    const rate=attRate(s.id);
+    const sc=avgScore(s.id);
+    const risk=riskLevel(s.id);
+    const riskBadge=risk==='high'?'<span class="badge badge-red">⚠️ בסיכון</span>':risk==='medium'?'<span class="badge badge-orange">⚡ מעקב</span>':'<span class="badge badge-green">✓ תקין</span>';
+    return`<tr>
+      <td><strong>${s.name}</strong>${s.join_date?`<div style="font-size:.72rem;color:var(--lgt)">הצטרף: ${fmt(s.join_date)}</div>`:''}</td>
+      <td>${grpName(s.group_id)}</td>
+      <td>${s.grade||'—'}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="prog-bar" style="width:60px"><div class="prog-fill" style="width:${rate}%;background:${rate<60?'var(--rd)':rate<80?'var(--or)':'var(--gr)'}"></div></div>
+          <span style="font-size:.82rem;font-weight:700">${rate}%</span>
+        </div>
+      </td>
+      <td>${sc!=null?`<span style="font-weight:700;color:${sc<60?'var(--rd)':sc<75?'var(--or)':'var(--gr)'}">${sc}</span>`:'—'}</td>
+      <td><span class="badge badge-blue">${s.subscription_type||'חודשי'}</span></td>
+      <td>${riskBadge}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-ghost" onclick="openStudentProfile('${s.id}')">👁️</button>
+        <button class="btn btn-sm btn-ghost" onclick="openStudentModal('${s.id}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="delStudent('${s.id}')">🗑️</button>
+        ${s.parent_phone||s.phone?`<button class="btn btn-sm btn-success" onclick="openWhatsApp('${s.parent_phone||s.phone}','${s.name}')">📱</button>`:''}
+      </td>
+    </tr>`;}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--lgt);padding:32px">אין תלמידים</td></tr>';
+}
+
+function filterStudents(){
+  const q=document.getElementById('stSearch')?.value.toLowerCase()||'';
+  const gid=document.getElementById('stGrpFilter')?.value||'';
+  const filtered=S.data.students.filter(s=>(s.name.toLowerCase().includes(q))&&(!gid||s.group_id===gid));
+  const body=document.getElementById('stBody');
+  if(body)body.innerHTML=renderStudentRows(filtered);
+}
+
+function openStudentModal(id){
+  const s=id?S.data.students.find(x=>x.id===id):{};
+  const D=S.data;
+  openModal(`
+  <div class="modal-h">${id?'עריכת':'תלמיד חדש'} <button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="fg-row">
+    <div class="fg"><label>שם מלא</label><input id="sName" value="${s.name||''}"/></div>
+    <div class="fg"><label>כיתה</label><input id="sGrade" value="${s.grade||''}"/></div>
+  </div>
+  <div class="fg"><label>קבוצה</label>
+    <select id="sGrp">
+      <option value="">ללא קבוצה</option>
+      ${D.groups.map(g=>`<option value="${g.id}" ${s.group_id===g.id?'selected':''}>${g.name}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>טלפון הורה</label><input id="sPhone" value="${s.parent_phone||''}"/></div>
+    <div class="fg"><label>אימייל הורה</label><input id="sParentEmail" value="${s.parent_email||''}"/></div>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>סוג מנוי</label>
+      <select id="sSub">
+        <option ${s.subscription_type==='חודשי'?'selected':''}>חודשי</option>
+        <option ${s.subscription_type==='שני'?'selected':''}>שני</option>
+        <option ${s.subscription_type==='מסובסד'?'selected':''}>מסובסד</option>
+      </select>
+    </div>
+    <div class="fg"><label>שיעורים לחודש</label><input id="sLpm" type="number" value="${s.lessons_per_month||8}"/></div>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>מחיר חודשי (₪)</label><input id="sPrice" type="number" value="${s.subscription_price||0}"/></div>
+    <div class="fg"><label>חידוש מנוי</label><input id="sRenew" type="date" value="${s.subscription_renewal||''}"/></div>
+  </div>
+  <div class="fg"><label>הערות</label><textarea id="sNotes">${s.notes||''}</textarea></div>
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <button class="btn btn-primary" style="flex:1" onclick="saveStudent(${id?`'${id}'`:'null'})">שמור</button>
+    <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
+  </div>`);
+}
+
+async function saveStudent(id){
+  const obj={
+    name:document.getElementById('sName').value.trim(),
+    grade:document.getElementById('sGrade').value.trim(),
+    group_id:document.getElementById('sGrp').value||null,
+    parent_phone:document.getElementById('sPhone').value.trim(),
+    parent_email:document.getElementById('sParentEmail').value.trim(),
+    subscription_type:document.getElementById('sSub').value,
+    lessons_per_month:parseInt(document.getElementById('sLpm').value)||8,
+    subscription_price:parseInt(document.getElementById('sPrice').value)||0,
+    subscription_renewal:document.getElementById('sRenew').value||null,
+    notes:document.getElementById('sNotes').value.trim(),
+    active:true,
+  };
+  if(!obj.name){toast('שם חובה','error');return;}
+  if(id){await sb.from('students').update(obj).eq('id',id);}
+  else{obj.join_date=today();await sb.from('students').insert(obj);}
+  closeModal();toast('✓ תלמיד נשמר','success');await renderStudents();
+}
+
+async function delStudent(id){
+  if(!confirm('למחוק תלמיד זה?'))return;
+  await sb.from('students').update({active:false}).eq('id',id);
+  toast('תלמיד הוסר');await renderStudents();
+}
+
+function openStudentProfile(id){
+  const s=S.data.students.find(x=>x.id===id);const D=S.data;
+  const att=D.attendance.filter(a=>a.student_id===id);
+  const pres=att.filter(a=>a.present);
+  const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1);
+  openModal(`
+  <div class="modal-h">${s.name} <button class="modal-close" onclick="closeModal()">×</button></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+    <div class="card-sm" style="text-align:center"><div style="font-size:1.6rem;font-weight:900">${attRate(id)}%</div><div style="font-size:.75rem;color:var(--lgt)">נוכחות</div></div>
+    <div class="card-sm" style="text-align:center"><div style="font-size:1.6rem;font-weight:900">${avgScore(id)??'—'}</div><div style="font-size:.75rem;color:var(--lgt)">ציון ממוצע</div></div>
+    <div class="card-sm" style="text-align:center"><div style="font-size:1.6rem;font-weight:900">${pres.length}</div><div style="font-size:.75rem;color:var(--lgt)">שיעורים</div></div>
+  </div>
+  ${scores.length?`<div style="height:140px;margin-bottom:16px"><canvas id="profileChart"></canvas></div>`:''}
+  <div style="margin-bottom:12px"><strong>קבוצה:</strong> ${grpName(s.group_id)}</div>
+  <div style="margin-bottom:12px"><strong>מנוי:</strong> ${s.subscription_type||'חודשי'} · ₪${s.subscription_price||0}/חודש</div>
+  ${s.subscription_renewal?`<div style="margin-bottom:12px"><strong>חידוש:</strong> ${fmt(s.subscription_renewal)}</div>`:''}
+  ${s.notes?`<div style="margin-bottom:12px"><strong>הערות:</strong> ${s.notes}</div>`:''}
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button class="btn btn-primary btn-sm" onclick="closeModal();genReport('${id}')">📄 הפק דוח</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeModal();openStudentModal('${id}')">✏️ עריכה</button>
+    ${s.parent_phone?`<button class="btn btn-success btn-sm" onclick="openWhatsApp('${s.parent_phone}','${s.name}')">📱 WhatsApp</button>`:''}
+  </div>`);
+  setTimeout(()=>{
+    const ctx2=document.getElementById('profileChart')?.getContext('2d');
+    if(ctx2&&scores.length){new Chart(ctx2,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:4,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});}
+  },100);
+}
+
+function openWhatsApp(phone,name){
+  if(!phone){toast('אין מספר טלפון','error');return;}
+  const ph=phone.replace(/\D/g,'').replace(/^0/,'972');
+  const msg=encodeURIComponent(`שלום, זה לידור ממרכז שורשים בנוגע ל${name}.`);
+  window.open(`https://wa.me/${ph}?text=${msg}`,'_blank');
+}
+</script>
+<script>
+// ══════════════════════════════════════
+//  ADMIN — SCHEDULE
+// ══════════════════════════════════════
+const DAYS_HE=['ראשון','שני','שלישי','רביעי','חמישי'];
+let wOff=0;
+
+async function renderSchedule(){
+  await loadAll();
+  setPage('לוח שבועי','ניהול שיעורים שבועיים',
+    `<button class="btn btn-ghost" onclick="wOff--;renderSchedule()">← שבוע</button>
+     <button class="btn btn-ghost" onclick="wOff=0;renderSchedule()">היום</button>
+     <button class="btn btn-ghost" onclick="wOff++;renderSchedule()">שבוע →</button>
+     <button class="btn btn-primary" onclick="genWeekLessons()">⚡ צור שיעורי שבוע</button>`);
+
+  const ws=weekStart(wOff);
+  const we=new Date(ws);we.setDate(we.getDate()+4);
+  const label=`${fmtDate(ws)} — ${fmtDate(we)}`;
+  document.getElementById('pageSub').textContent=label;
+
+  const D=S.data;
+  const weekDates=DAYS_HE.map((_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return fmtDate(d);});
+
+  setContent(`
+  <div class="week-grid">
+    ${DAYS_HE.map((day,i)=>{
+      const date=weekDates[i];
+      const dayLessons=D.lessons.filter(l=>l.lesson_date===date).sort((a,b)=>a.start_time>b.start_time?1:-1);
+      return`<div class="week-col">
+        <div class="week-day-header" style="${date===today()?'background:rgba(58,91,240,.12);color:var(--bl)':''}">${day}<br><span style="font-size:.7rem;font-weight:400">${date}</span></div>
+        ${dayLessons.map(l=>{
+          const g=D.groups.find(g=>g.id===l.group_id);
+          const att=D.attendance.filter(a=>a.lesson_id===l.id);
+          const pres=att.filter(a=>a.present).length;
+          const total=D.students.filter(s=>s.group_id===l.group_id).length;
+          return`<div class="week-lesson" onclick="openLessonModal('${l.id}')" style="border-right-color:${g?.color||'var(--bl)'}">
+            <div class="wl-group">${g?.name||'—'}</div>
+            <div class="wl-time">${l.start_time||''}</div>
+            ${l.topic?`<div class="wl-topic">${l.topic}</div>`:''}
+            <div style="font-size:.72rem;color:var(--lgt);margin-top:4px">${pres}/${total} ✓</div>
+          </div>`;}).join('')}
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="openNewLessonModal('${date}')">+ שיעור</button>
+      </div>`;}).join('')}
+  </div>`);
+}
+
+function weekStart(off=0){
+  const d=new Date();
+  const day=d.getDay();
+  d.setDate(d.getDate()-day+(off*7));
+  return d;
+}
+
+async function genWeekLessons(){
+  await loadAll();const D=S.data;
+  const ws=weekStart(wOff);
+  let created=0;
+  for(const g of D.groups){
+    const days=(g.schedule_days||'').split(',').filter(Boolean);
+    for(let i=0;i<5;i++){
+      const dayName=DAYS_HE[i];
+      if(!days.includes(dayName))continue;
+      const d=new Date(ws);d.setDate(d.getDate()+i);
+      const dateStr=fmtDate(d);
+      const exists=D.lessons.find(l=>l.group_id===g.id&&l.lesson_date===dateStr);
+      if(exists)continue;
+      const {data:lesson}=await sb.from('lessons').insert({group_id:g.id,lesson_date:dateStr,start_time:g.schedule_time||null,duration:90}).select().single();
+      if(lesson){
+        const students=D.students.filter(s=>s.group_id===g.id);
+        if(students.length)await sb.from('attendance').insert(students.map(s=>({lesson_id:lesson.id,student_id:s.id,present:true})));
+        created++;
+      }
+    }
+  }
+  toast(`✓ נוצרו ${created} שיעורים`,'success');
+  await renderSchedule();
+}
+
+function openNewLessonModal(date){
+  const D=S.data;
+  openModal(`
+  <div class="modal-h">שיעור חדש — ${date} <button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="fg"><label>קבוצה</label>
+    <select id="nlGrp">
+      <option value="">בחר קבוצה</option>
+      ${D.groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}
+    </select>
+  </div>
+  <div class="fg-row">
+    <div class="fg"><label>שעת התחלה</label><input id="nlTime" type="time"/></div>
+    <div class="fg"><label>משך (דקות)</label><input id="nlDur" type="number" value="90"/></div>
+  </div>
+  <div class="fg"><label>נושא השיעור</label><input id="nlTopic" placeholder="אופציונלי"/></div>
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <button class="btn btn-primary" style="flex:1" onclick="saveNewLesson('${date}')">צור שיעור</button>
+    <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
+  </div>`);
+}
+
+async function saveNewLesson(date){
+  const gid=document.getElementById('nlGrp').value;
+  if(!gid){toast('בחר קבוצה','error');return;}
+  const {data:lesson}=await sb.from('lessons').insert({
+    group_id:gid,lesson_date:date,
+    start_time:document.getElementById('nlTime').value||null,
+    duration:parseInt(document.getElementById('nlDur').value)||90,
+    topic:document.getElementById('nlTopic').value.trim()||null
+  }).select().single();
+  if(lesson){
+    const students=S.data.students.filter(s=>s.group_id===gid);
+    if(students.length)await sb.from('attendance').insert(students.map(s=>({lesson_id:lesson.id,student_id:s.id,present:true})));
+  }
+  closeModal();toast('✓ שיעור נוצר','success');await renderSchedule();
+}
+
+async function openLessonModal(lid){
+  await loadAll();const D=S.data;
+  const l=D.lessons.find(x=>x.id===lid);if(!l)return;
+  const g=D.groups.find(x=>x.id===l.group_id);
+  const students=D.students.filter(s=>s.group_id===l.group_id);
+  const attMap={};D.attendance.filter(a=>a.lesson_id===lid).forEach(a=>attMap[a.student_id]=a);
+
+  openModal(`
+  <div class="modal-h">${g?.name||'שיעור'} · ${fmt(l.lesson_date)} <button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="fg-row">
+    <div class="fg"><label>נושא</label><input id="ltopic" value="${l.topic||''}"/></div>
+    <div class="fg"><label>שעה</label><input id="ltime" type="time" value="${l.start_time||''}"/></div>
+  </div>
+  <div class="fg"><label>סיכום</label><textarea id="lsummary">${l.summary||''}</textarea></div>
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:16px" onclick="saveLessonMeta('${lid}')">שמור פרטי שיעור</button>
+
+  <div style="font-size:.85rem;font-weight:700;color:var(--mid);margin-bottom:10px">נוכחות וציונים</div>
+  <div class="att-grid" id="attGrid">
+    ${students.map(s=>{
+      const a=attMap[s.id]||{present:true};
+      return`<div class="att-row">
+        <div class="att-name">${s.name}</div>
+        <div class="att-toggle">
+          <button class="att-btn ${a.present?'active-present':'present'}" onclick="toggleAtt('${lid}','${s.id}',true,this)">✓</button>
+          <button class="att-btn ${!a.present?'active-absent':'absent'}" onclick="toggleAtt('${lid}','${s.id}',false,this)">✗</button>
+        </div>
+        <div class="att-fields">
+          <input class="att-score" type="number" min="0" max="100" placeholder="ציון" value="${a.score??''}" onchange="saveAttField('${lid}','${s.id}','score',this.value)" ${!a.present?'disabled':''}/>
+          <input class="att-note" placeholder="הערה..." value="${a.att_notes||''}" onchange="saveAttField('${lid}','${s.id}','att_notes',this.value)" ${!a.present?'disabled':''}/>
+        </div>
+      </div>`;}).join('')||'<div class="empty"><p>אין תלמידים בקבוצה</p></div>'}
+  </div>
+  <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+    <button class="btn btn-danger btn-sm" onclick="delLesson('${lid}')">🗑️ מחק שיעור</button>
+  </div>`);
+}
+
+async function saveLessonMeta(lid){
+  await sb.from('lessons').update({topic:document.getElementById('ltopic').value.trim(),start_time:document.getElementById('ltime').value||null,summary:document.getElementById('lsummary').value.trim()}).eq('id',lid);
+  toast('✓ נשמר','success');
+}
+
+async function toggleAtt(lid,sid,present,btn){
+  const row=btn.closest('.att-row');
+  row.querySelectorAll('.att-btn').forEach(b=>{b.classList.remove('active-present','active-absent');});
+  btn.classList.add(present?'active-present':'active-absent');
+  const inputs=row.querySelectorAll('.att-score,.att-note');
+  inputs.forEach(i=>i.disabled=!present);
+  const exists=S.data.attendance.find(a=>a.lesson_id===lid&&a.student_id===sid);
+  if(exists){await sb.from('attendance').update({present}).eq('lesson_id',lid).eq('student_id',sid);}
+  else{await sb.from('attendance').insert({lesson_id:lid,student_id:sid,present});}
+  const idx=S.data.attendance.findIndex(a=>a.lesson_id===lid&&a.student_id===sid);
+  if(idx>=0)S.data.attendance[idx].present=present;
+  else S.data.attendance.push({lesson_id:lid,student_id:sid,present});
+}
+
+async function saveAttField(lid,sid,field,value){
+  const val=field==='score'?(value===''?null:parseInt(value)):value;
+  const exists=S.data.attendance.find(a=>a.lesson_id===lid&&a.student_id===sid);
+  if(exists){await sb.from('attendance').update({[field]:val}).eq('lesson_id',lid).eq('student_id',sid);}
+  else{await sb.from('attendance').insert({lesson_id:lid,student_id:sid,present:true,[field]:val});}
+}
+
+async function delLesson(lid){
+  if(!confirm('למחוק שיעור זה?'))return;
+  await sb.from('attendance').delete().eq('lesson_id',lid);
+  await sb.from('lessons').delete().eq('id',lid);
+  closeModal();toast('שיעור נמחק');await renderSchedule();
+}
+</script>
+<script>
+// ══════════════════════════════════════
+//  ADMIN — REPORTS
+// ══════════════════════════════════════
+async function renderReports(){
+  await loadAll();const D=S.data;
+  setPage('דוחות','הפקת דוחות התקדמות להורים');
+  setContent(`
+  <div class="card">
+    <h3 style="font-weight:700;margin-bottom:16px">הפקת דוח לתלמיד</h3>
+    <div class="fg-row" style="margin-bottom:16px">
+      <div class="fg"><label>תלמיד</label>
+        <select id="repStudent">
+          <option value="">בחר תלמיד</option>
+          ${D.students.map(s=>`<option value="${s.id}">${s.name} (${grpName(s.group_id)})</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg" style="display:flex;align-items:flex-end">
+        <button class="btn btn-primary" style="width:100%" onclick="genReport(document.getElementById('repStudent').value)">📄 הפק דוח PDF</button>
+      </div>
+    </div>
+    <p style="font-size:.82rem;color:var(--lgt)">הדוח נפתח בחלון חדש ומוכן להדפסה / שמירה כ-PDF.</p>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3 style="font-weight:700;margin-bottom:16px">סיכום כל התלמידים</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>תלמיד</th><th>קבוצה</th><th>נוכחות</th><th>ציון ממוצע</th><th>שיעורים</th><th>סטטוס</th><th>פעולה</th></tr></thead>
+        <tbody>
+          ${D.students.map(s=>{
+            const rate=attRate(s.id);const sc=avgScore(s.id);
+            const cnt=D.attendance.filter(a=>a.student_id===s.id&&a.present).length;
+            const risk=riskLevel(s.id);
+            return`<tr>
+              <td><strong>${s.name}</strong></td>
+              <td>${grpName(s.group_id)}</td>
+              <td>${rate}%</td>
+              <td>${sc??'—'}</td>
+              <td>${cnt}</td>
+              <td>${risk==='high'?'<span class="badge badge-red">⚠️ בסיכון</span>':risk==='medium'?'<span class="badge badge-orange">⚡</span>':'<span class="badge badge-green">✓</span>'}</td>
+              <td><button class="btn btn-sm btn-ghost" onclick="genReport('${s.id}')">📄 דוח</button></td>
+            </tr>`;}).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`);
+}
+
+async function genReport(sid){
+  if(!sid){toast('בחר תלמיד','error');return;}
+  if(!S.data.students)await loadAll();
+  const D=S.data;
+  const s=D.students.find(x=>x.id===sid);if(!s)return;
+  const g=D.groups.find(x=>x.id===s.group_id);
+  const att=D.attendance.filter(a=>a.student_id===sid);
+  const pres=att.filter(a=>a.present);
+  const rate=att.length?Math.round(pres.length/att.length*100):0;
+  const scores=att.filter(a=>a.score!=null).map(a=>{
+    const l=D.lessons.find(l=>l.id===a.lesson_id);
+    return{date:l?.lesson_date||'',score:a.score,topic:l?.topic||''};
+  }).sort((a,b)=>a.date>b.date?1:-1);
+  const avgSc=scores.length?Math.round(scores.reduce((a,b)=>a+b.score,0)/scores.length):null;
+  const hw=att.filter(a=>a.homework_done).length;
+  const hwTotal=att.filter(a=>a.homework_assigned).length;
+
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"/>
+  <title>דוח התקדמות — ${s.name}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Rubik',sans-serif;background:#fff;color:#12172E;padding:0}
+    .page{max-width:800px;margin:0 auto;padding:40px}
+    .header{background:linear-gradient(135deg,#06091E,#0D1340);color:#fff;padding:40px;border-radius:16px;margin-bottom:32px;position:relative;overflow:hidden}
+    .header::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:20px 20px}
+    .logo{font-size:2rem;font-weight:900;color:#fff;letter-spacing:-1px;position:relative}
+    .logo span{color:#00D4E8}
+    .student-name{font-size:1.6rem;font-weight:900;margin-top:16px;position:relative}
+    .meta{font-size:.85rem;color:rgba(255,255,255,.5);margin-top:8px;position:relative}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+    .kpi{background:#F4F6FF;border-radius:12px;padding:20px;text-align:center}
+    .kpi-val{font-size:2rem;font-weight:900;color:#3A5BF0}
+    .kpi-lbl{font-size:.72rem;color:#8890B5;margin-top:4px}
+    h2{font-size:1.1rem;font-weight:700;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #eee}
+    table{width:100%;border-collapse:collapse;margin-bottom:28px}
+    th{padding:10px;text-align:right;font-size:.75rem;color:#8890B5;border-bottom:1px solid #eee}
+    td{padding:10px;font-size:.85rem;border-bottom:1px solid #f5f5f5}
+    .badge-g{background:rgba(46,204,113,.1);color:#27ae60;padding:2px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
+    .badge-r{background:rgba(255,77,109,.1);color:#FF4D6D;padding:2px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
+    .footer{margin-top:40px;padding-top:20px;border-top:1px solid #eee;text-align:center;color:#8890B5;font-size:.78rem}
+    .charter{background:#F4F6FF;border-radius:12px;padding:24px;margin-bottom:28px}
+    .charter h3{font-size:.95rem;font-weight:700;margin-bottom:12px}
+    .charter p{font-size:.82rem;color:#4A5178;line-height:1.7}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style></head><body>
+  <div class="page">
+    <div class="header">
+      <div class="logo">שור<span>שים</span></div>
+      <div class="student-name">${s.name}</div>
+      <div class="meta">קבוצה: ${g?.name||'—'} · דוח הופק: ${new Date().toLocaleDateString('he-IL')}</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-val">${rate}%</div><div class="kpi-lbl">נוכחות</div></div>
+      <div class="kpi"><div class="kpi-val">${avgSc??'—'}</div><div class="kpi-lbl">ציון ממוצע</div></div>
+      <div class="kpi"><div class="kpi-val">${pres.length}</div><div class="kpi-lbl">שיעורים</div></div>
+      <div class="kpi"><div class="kpi-val">${hwTotal?Math.round(hw/hwTotal*100)+'%':'—'}</div><div class="kpi-lbl">שיעורי בית</div></div>
+    </div>
+    ${scores.length?`<h2>ציונים לאורך זמן</h2>
+    <table><thead><tr><th>תאריך</th><th>נושא</th><th>ציון</th></tr></thead><tbody>
+    ${scores.map(x=>`<tr><td>${fmt(x.date)}</td><td>${x.topic||'—'}</td><td><span class="${x.score>=75?'badge-g':'badge-r'}">${x.score}</span></td></tr>`).join('')}
+    </tbody></table>`:''}
+    <div class="charter">
+      <h3>⭐ המלצת המנטור</h3>
+      <p>${s.notes||'תלמיד מצוין המציג עקביות ומאמץ. ממשיך להתקדם בקצב טוב.'}</p>
+    </div>
+    <div class="footer">
+      <strong>שורשים</strong> — מרחב למידה וקהילה לבני נוער בקריית שמונה<br>
+      המסמך הופק אוטומטית על ידי מערכת שורשים · ${new Date().toLocaleDateString('he-IL')}
+    </div>
+  </div>
+  <script>window.onload=()=>window.print()<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+// ══════════════════════════════════════
+//  ADMIN — SUBSCRIPTIONS
+// ══════════════════════════════════════
+async function renderSubscriptions(){
+  await loadAll();const D=S.data;
+  const soon=new Date();soon.setDate(soon.getDate()+14);
+  const expiring=D.students.filter(s=>s.subscription_renewal&&new Date(s.subscription_renewal)<=soon);
+  setPage('מנויים','מעקב תשלומים וחידושים');
+  setContent(`
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi"><div class="kpi-icon">💳</div><div class="kpi-val">${D.students.length}</div><div class="kpi-label">מנויים פעילים</div></div>
+    <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val">${expiring.length}</div><div class="kpi-label">מתחדשים ב-14 יום</div></div>
+    <div class="kpi"><div class="kpi-icon">₪</div><div class="kpi-val">${D.students.reduce((a,s)=>a+(s.subscription_price||0),0).toLocaleString()}</div><div class="kpi-label">הכנסה חודשית</div></div>
+  </div>
+  ${expiring.length?`<div class="card" style="margin-bottom:16px;border-color:var(--or)">
+    <h3 style="font-weight:700;margin-bottom:12px;color:var(--or)">⚠️ מתחדשים בקרוב</h3>
+    ${expiring.map(s=>`<div class="acc-row">
+      <div class="acc-avatar" style="background:var(--or)">${s.name.charAt(0)}</div>
+      <div class="acc-info"><div class="acc-name">${s.name}</div><div class="acc-email">חידוש: ${fmt(s.subscription_renewal)}</div></div>
+      <span class="badge badge-orange">₪${s.subscription_price||0}/חודש</span>
+      ${s.parent_phone?`<button class="btn btn-sm btn-success" onclick="openWhatsApp('${s.parent_phone}','${s.name}')">📱</button>`:''}
+    </div>`).join('')}
+  </div>`:''}
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>תלמיד</th><th>קבוצה</th><th>סוג מנוי</th><th>מחיר</th><th>חידוש</th><th>פעולות</th></tr></thead>
+        <tbody>
+          ${D.students.map(s=>`<tr>
+            <td><strong>${s.name}</strong></td>
+            <td>${grpName(s.group_id)}</td>
+            <td><span class="badge badge-blue">${s.subscription_type||'חודשי'}</span></td>
+            <td>₪${s.subscription_price||0}</td>
+            <td>${s.subscription_renewal?`<span style="color:${new Date(s.subscription_renewal)<=soon?'var(--or)':'var(--gr)'}">${fmt(s.subscription_renewal)}</span>`:'—'}</td>
+            <td><button class="btn btn-sm btn-ghost" onclick="openStudentModal('${s.id}')">✏️</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`);
+}
+
+// ══════════════════════════════════════
+//  ADMIN — RESOURCES
+// ══════════════════════════════════════
+async function renderResources(){
+  await loadAll();
+  setPage('משאבים','ספריית קבצים ותבניות',`<button class="btn btn-primary" onclick="openResourceModal()">+ הוספת משאב</button>`);
+  const D=S.data;
+  setContent(`
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+    ${D.resources.map(r=>`<div class="card">
+      <div style="font-size:1.8rem;margin-bottom:8px">${r.file_type?.includes('pdf')?'📄':r.file_type?.includes('image')?'🖼️':'📁'}</div>
+      <div style="font-weight:700;margin-bottom:4px">${r.name}</div>
+      ${r.description?`<div style="font-size:.8rem;color:var(--lgt);margin-bottom:8px">${r.description}</div>`:''}
+      <span class="badge badge-gray">${r.category||'כללי'}</span>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        ${r.file_path?`<a href="${r.file_path}" target="_blank" class="btn btn-sm btn-primary">⬇️ הורד</a>`:''}
+        <button class="btn btn-sm btn-danger" onclick="delResource('${r.id}')">🗑️</button>
+      </div>
+    </div>`).join('')||'<div class="empty"><div class="ei">📁</div><p>אין משאבים עדיין</p></div>'}
+  </div>`);
+}
+
+function openResourceModal(){
+  openModal(`
+  <div class="modal-h">משאב חדש <button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="fg"><label>שם</label><input id="rName" placeholder="שם המשאב"/></div>
+  <div class="fg"><label>תיאור</label><input id="rDesc" placeholder="תיאור קצר"/></div>
+  <div class="fg"><label>קטגוריה</label><input id="rCat" value="כללי"/></div>
+  <div class="fg"><label>קישור לקובץ (URL)</label><input id="rUrl" placeholder="https://..."/></div>
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <button class="btn btn-primary" style="flex:1" onclick="saveResource()">שמור</button>
+    <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
+  </div>`);
+}
+
+async function saveResource(){
+  const obj={name:document.getElementById('rName').value.trim(),description:document.getElementById('rDesc').value.trim(),category:document.getElementById('rCat').value.trim(),file_path:document.getElementById('rUrl').value.trim()};
+  if(!obj.name){toast('שם חובה','error');return;}
+  await sb.from('resources').insert(obj);
+  closeModal();toast('✓ משאב נשמר','success');await renderResources();
+}
+
+async function delResource(id){
+  if(!confirm('למחוק?'))return;
+  await sb.from('resources').delete().eq('id',id);
+  toast('נמחק');await renderResources();
+}
+</script>
+<script>
+// ══════════════════════════════════════
+//  ADMIN — ACCOUNTS (registration + roles)
+// ══════════════════════════════════════
+async function renderAccounts(){
+  await loadAll();
+  const {data:profiles}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  setPage('ניהול חשבונות','הזמנת הורים ותלמידים למערכת',
+    `<button class="btn btn-primary" onclick="openInviteModal()">+ הזמן משתמש</button>`);
+
+  const roleLabel={admin:'מנהל',parent:'הורה',student:'תלמיד'};
+  const roleColor={admin:'badge-red',parent:'badge-blue',student:'badge-green'};
+
+  setContent(`
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="font-weight:700;margin-bottom:4px">כיצד עובד הרישום?</h3>
+    <p style="font-size:.85rem;color:var(--mid);line-height:1.6">
+      לחץ "הזמן משתמש" → הזן אימייל וסוג תפקיד → המשתמש יקבל אימייל עם קישור לאיפוס סיסמה → בכניסה ראשונה יגדיר סיסמה → המערכת תסווג אותו אוטומטית.
+      <br><strong>הורה</strong> — ישויך לתלמיד דרך לשונית "תלמידים" ← עריכת תלמיד ← אימייל הורה.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>שם</th><th>תפקיד</th><th>מזהה משתמש (ID)</th><th>שויך ל</th><th>שינוי תפקיד</th></tr></thead>
+        <tbody>
+        ${(profiles||[]).map(p=>{
+          const linked=p.role==='parent'?S.data.students.filter(s=>s.parent_user_id===p.id).map(s=>s.name).join(', '):
+                        p.role==='student'?S.data.students.find(s=>s.user_id===p.id)?.name||'—':'—';
+          return`<tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="acc-avatar" style="background:${p.avatar_color||'var(--bl)'};">${(p.full_name||'?').charAt(0).toUpperCase()}</div>
+                <strong>${p.full_name||'—'}</strong>
+              </div>
+            </td>
+            <td><span class="badge ${roleColor[p.role]||'badge-gray'}">${roleLabel[p.role]||p.role}</span></td>
+            <td style="font-size:.82rem;color:var(--mid)">${p.id}</td>
+            <td style="font-size:.82rem">${linked||'—'}</td>
+            <td>
+              <select onchange="changeRole('${p.id}',this.value)" style="padding:6px 10px;border:1.5px solid var(--brd);border-radius:8px;font-size:.82rem;outline:none">
+                <option value="admin" ${p.role==='admin'?'selected':''}>מנהל</option>
+                <option value="parent" ${p.role==='parent'?'selected':''}>הורה</option>
+                <option value="student" ${p.role==='student'?'selected':''}>תלמיד</option>
+              </select>
+            </td>
+          </tr>`;}).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--lgt);padding:32px">אין משתמשים רשומים</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3 style="font-weight:700;margin-bottom:16px">שיוך הורה לתלמיד</h3>
+    <p style="font-size:.83rem;color:var(--mid);margin-bottom:12px">לאחר שהורה נרשם — שייך אותו לתלמיד כדי שיראה את הנתונים שלו.</p>
+    <div class="fg-row">
+      <div class="fg"><label>תלמיד</label>
+        <select id="linkSt">
+          <option value="">בחר תלמיד</option>
+          ${S.data.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label>ID הורה (מהטבלה למעלה)</label>
+        <input id="linkParent" placeholder="הדבק ID מעמודת 'מזהה משתמש' למעלה"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="linkParentToStudent()">שייך הורה לתלמיד</button>
+
+    <div style="margin-top:20px;border-top:1px solid var(--brd);padding-top:16px">
+      <h4 style="font-weight:700;margin-bottom:12px">שיוך תלמיד לחשבון</h4>
+      <div class="fg-row">
+        <div class="fg"><label>תלמיד</label>
+          <select id="linkStSelf">
+            <option value="">בחר תלמיד</option>
+            ${S.data.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><label>ID משתמש (תלמיד)</label>
+          <input id="linkStudentUser" placeholder="הדבק ID מעמודת 'מזהה משתמש' למעלה"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="linkStudentUser()">שייך תלמיד</button>
+    </div>
+  </div>`);
+}
+
+async function changeRole(uid,role){
+  await sb.from('profiles').update({role}).eq('id',uid);
+  toast(`✓ תפקיד שונה ל${role==='admin'?'מנהל':role==='parent'?'הורה':'תלמיד'}`,'success');
+}
+
+async function linkParentToStudent(){
+  const sid=document.getElementById('linkSt').value;
+  const pid=document.getElementById('linkParent').value.trim();
+  if(!sid||!pid){toast('בחר תלמיד והזן ID הורה','error');return;}
+  await sb.from('students').update({parent_user_id:pid}).eq('id',sid);
+  toast('✓ הורה שויך לתלמיד','success');
+}
+
+async function linkStudentUser(){
+  const sid=document.getElementById('linkStSelf').value;
+  const uid=document.getElementById('linkStudentUser').value.trim();
+  if(!sid||!uid){toast('בחר תלמיד והזן ID','error');return;}
+  await sb.from('students').update({user_id:uid}).eq('id',sid);
+  toast('✓ תלמיד שויך לחשבון','success');
+}
+
+function openInviteModal(){
+  openModal(`
+  <div class="modal-h">הזמן משתמש <button class="modal-close" onclick="closeModal()">×</button></div>
+  <p style="font-size:.85rem;color:var(--mid);margin-bottom:20px;line-height:1.6">המשתמש יקבל אימייל עם קישור לאיפוס סיסמה. לאחר כניסה ראשונה יוכל להתחבר למערכת.</p>
+  <div class="fg"><label>שם מלא</label><input id="invName" placeholder="שם פרטי ומשפחה"/></div>
+  <div class="fg"><label>אימייל</label><input id="invEmail" type="email" placeholder="email@example.com"/></div>
+  <div class="fg"><label>סיסמה זמנית</label>
+    <div style="display:flex;gap:8px">
+      <input id="invPwd" value="Shoreshim2025!" style="flex:1;padding:11px 14px;border:1.5px solid var(--brd);border-radius:10px;font-size:.9rem;outline:none"/>
+      <button class="btn btn-ghost" onclick="document.getElementById('invPwd').select();document.execCommand('copy');toast('✓ הועתק','success')">📋</button>
+    </div>
+  </div>
+  <div class="fg"><label>תפקיד</label>
+    <select id="invRole">
+      <option value="parent">הורה</option>
+      <option value="student">תלמיד</option>
+      <option value="admin">מנהל</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <button class="btn btn-primary" style="flex:1" onclick="createAccount()">צור חשבון</button>
+    <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
+  </div>`);
+}
+
+async function createAccount(){
+  const name=document.getElementById('invName').value.trim();
+  const email=document.getElementById('invEmail').value.trim();
+  const pwd=document.getElementById('invPwd').value.trim();
+  const role=document.getElementById('invRole').value;
+  if(!name||!email||!pwd){toast('מלא את כל השדות','error');return;}
+
+  // Create user via signUp (user gets email confirmation)
+  const {data,error}=await sb.auth.signUp({
+    email,password:pwd,
+    options:{data:{full_name:name,role}}
+  });
+  if(error){toast('שגיאה: '+error.message,'error');return;}
+
+  // Insert profile manually in case trigger is slow
+  if(data.user){
+    await sb.from('profiles').upsert({id:data.user.id,full_name:name,role,avatar_color:rndColor()});
+  }
+
+  closeModal();
+  toast(`✓ חשבון נוצר! שלח את הסיסמה הזמנית: ${pwd}`,'success');
+  setTimeout(()=>renderAccounts(),1000);
+}
+
+// ══════════════════════════════════════
+//  PARENT PORTAL
+// ══════════════════════════════════════
+function renderParentDashboard(){
+  const D=S.data;
+  if(!D.children?.length){
+    setPage('שלום!','');
+    setContent(`<div class="empty"><div class="ei">👋</div><p>חשבונך עדיין לא שויך לילד. אנא פנה למנטור לידור לשיוך.</p></div>`);
+    return;
+  }
+  const child=D.children[0];
+  const g=D.groups?.find(x=>x.id===child.group_id);
+  const att=D.attendance.filter(a=>a.student_id===child.id);
+  const rate=att.length?Math.round(att.filter(a=>a.present).length/att.length*100):0;
+  const sc=avgScoreArr(att);
+  const pres=att.filter(a=>a.present).length;
+
+  setPage(`שלום ${S.profile.full_name?.split(' ')[0]||''}!`,`מעקב התקדמות — ${child.name}`);
+  setContent(`
+  <div class="parent-hero">
+    <div style="font-size:.78rem;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.1em;margin-bottom:8px">תלמיד</div>
+    <div class="parent-child-name">${child.name}</div>
+    <div class="parent-child-group">קבוצה: ${g?.name||'—'} · כיתה: ${child.grade||'—'}</div>
+    <div class="parent-stats">
+      <div class="parent-stat"><div class="parent-stat-val" style="color:${rate<60?'#FF4D6D':rate<80?'#FF9A3C':'#C1FF00'}">${rate}%</div><div class="parent-stat-lbl">נוכחות</div></div>
+      <div class="parent-stat"><div class="parent-stat-val">${sc??'—'}</div><div class="parent-stat-lbl">ציון ממוצע</div></div>
+      <div class="parent-stat"><div class="parent-stat-val">${pres}</div><div class="parent-stat-lbl">שיעורים</div></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">📈 ציונים אחרונים</h3>
+      <div class="chart-wrap"><canvas id="parentChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">📋 נוכחות אחרונה</h3>
+      ${att.slice(-8).reverse().map(a=>{
+        const l=D.lessons.find(x=>x.id===a.lesson_id);
+        return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--brd)">
+          <span style="font-size:.85rem">${fmt(l?.lesson_date)}</span>
+          <span class="badge ${a.present?'badge-green':'badge-red'}">${a.present?'✓ נוכח':'✗ נעדר'}</span>
+        </div>`;}).join('')||'<div class="empty"><p>אין נתונים</p></div>'}
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">📝 שיעורי הבית האחרונים</h3>
+      ${att.filter(a=>a.homework_assigned).slice(-5).reverse().map(a=>{
+        const l=D.lessons.find(x=>x.id===a.lesson_id);
+        return`<div class="hw-item">
+          <div class="hw-cb ${a.homework_done?'done':''}"></div>
+          <div style="flex:1">
+            <div class="hw-text ${a.homework_done?'done':''}">${a.homework_assigned}</div>
+            <div class="hw-date">${fmt(l?.lesson_date)}</div>
+          </div>
+          <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'הוגש':'ממתין'}</span>
+        </div>`;}).join('')||'<div class="empty"><p>אין שיעורי בית</p></div>'}
+    </div>
+  </div>`);
+
+  const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1).slice(-10);
+  setTimeout(()=>{
+    const ctx=document.getElementById('parentChart')?.getContext('2d');
+    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:4,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});}
+  },100);
+}
+
+function avgScoreArr(att){
+  const sc=att.filter(a=>a.score!=null).map(a=>a.score);
+  return sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):null;
+}
+
+function renderParentAttendance(){
+  const D=S.data;const child=D.children?.[0];if(!child)return;
+  const att=D.attendance.filter(a=>a.student_id===child.id);
+  setPage('נוכחות',child.name);
+  setContent(`<div class="card">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>תאריך</th><th>קבוצה</th><th>נושא</th><th>נוכחות</th><th>ציון</th><th>הערה</th></tr></thead>
+      <tbody>
+        ${att.map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);const g=D.groups?.find(x=>x.id===l?.group_id);
+          return`<tr>
+            <td>${fmt(l?.lesson_date)}</td><td>${g?.name||'—'}</td><td>${l?.topic||'—'}</td>
+            <td><span class="badge ${a.present?'badge-green':'badge-red'}">${a.present?'✓ נוכח':'✗ נעדר'}</span></td>
+            <td>${a.score!=null?`<strong>${a.score}</strong>`:'—'}</td>
+            <td style="font-size:.82rem;color:var(--mid)">${a.att_notes||'—'}</td>
+          </tr>`;}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--lgt);padding:32px">אין נתונים</td></tr>'}
+      </tbody>
+    </table></div>
+  </div>`);
+}
+
+function renderParentProgress(){
+  const D=S.data;const child=D.children?.[0];if(!child)return;
+  const att=D.attendance.filter(a=>a.student_id===child.id);
+  const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1);
+  setPage('התקדמות',child.name);
+  setContent(`<div class="card"><div class="chart-wrap" style="height:300px"><canvas id="progChart"></canvas></div></div>`);
+  setTimeout(()=>{
+    const ctx=document.getElementById('progChart')?.getContext('2d');
+    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{label:'ציון',data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:5,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}}}});}
+  },100);
+}
+
+function renderParentHomework(){
+  const D=S.data;const child=D.children?.[0];if(!child)return;
+  const att=D.attendance.filter(a=>a.student_id===child.id&&a.homework_assigned);
+  setPage('שיעורי בית',child.name);
+  setContent(`<div class="card">
+    ${att.reverse().map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
+      return`<div class="hw-item">
+        <div class="hw-cb ${a.homework_done?'done':''}"></div>
+        <div style="flex:1"><div class="hw-text ${a.homework_done?'done':''}">${a.homework_assigned}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
+        <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'✓ הוגש':'ממתין'}</span>
+      </div>`;}).join('')||'<div class="empty"><div class="ei">📝</div><p>אין שיעורי בית</p></div>'}
+  </div>`);
+}
+
+function renderParentReport(){
+  const D=S.data;const child=D.children?.[0];if(!child)return;
+  setPage('דוח התקדמות',child.name);
+  setContent(`<div class="card" style="text-align:center;padding:48px">
+    <div style="font-size:3rem;margin-bottom:16px">📄</div>
+    <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px">דוח התקדמות — ${child.name}</h2>
+    <p style="color:var(--mid);margin-bottom:24px">הדוח נפתח בחלון חדש ומוכן להדפסה ושמירה כ-PDF.</p>
+    <button class="btn btn-primary" onclick="genParentReport('${child.id}')">📄 הפק דוח</button>
+  </div>`);
+}
+
+async function genParentReport(sid){
+  if(!S.data.students){
+    S.data.students=S.data.children||[];
+    S.data.groups=S.data.groups||[];
+    S.data.lessons=S.data.lessons||[];
+  }
+  genReport(sid);
+}
+
+// ══════════════════════════════════════
+//  STUDENT PORTAL
+// ══════════════════════════════════════
+function renderStudentDashboard(){
+  const D=S.data;const s=D.student;
+  if(!s){setPage('שלום!','');setContent(`<div class="empty"><div class="ei">👋</div><p>חשבונך עדיין לא שויך לתלמיד. פנה ללידור.</p></div>`);return;}
+  const att=D.attendance;
+  const rate=att.length?Math.round(att.filter(a=>a.present).length/att.length*100):0;
+  const sc=avgScoreArr(att);
+  const pres=att.filter(a=>a.present).length;
+  const upcoming=D.lessons.filter(l=>l.lesson_date>=today()).slice(0,3);
+  const pending=att.filter(a=>a.homework_assigned&&!a.homework_done);
+
+  setPage(`שלום ${s.name.split(' ')[0]}! 👋`,D.group?.name||'');
+  setContent(`
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val">${rate}%</div><div class="kpi-label">נוכחות</div></div>
+    <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-val">${sc??'—'}</div><div class="kpi-label">ציון ממוצע</div></div>
+    <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val">${pres}</div><div class="kpi-label">שיעורים</div></div>
+    <div class="kpi"><div class="kpi-icon">📝</div><div class="kpi-val">${pending.length}</div><div class="kpi-label">שיעורי בית</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">📅 שיעורים קרובים</h3>
+      ${upcoming.map(l=>`<div class="week-lesson">
+        <div class="wl-group">${D.group?.name||'—'}</div>
+        <div class="wl-time">${fmt(l.lesson_date)} ${l.start_time?'· '+l.start_time:''}</div>
+        ${l.topic?`<div class="wl-topic">${l.topic}</div>`:''}
+      </div>`).join('')||'<div class="empty"><p>אין שיעורים מתוכננים</p></div>'}
+    </div>
+    <div class="card">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">📝 שיעורי בית פתוחים</h3>
+      ${pending.slice(0,5).map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
+        return`<div class="hw-item">
+          <div class="hw-cb" onclick="markHwDone('${a.lesson_id}','${s.id}',this,false)"></div>
+          <div><div class="hw-text">${a.homework_assigned}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
+        </div>`;}).join('')||'<div class="empty"><div class="ei">🎉</div><p>אין שיעורי בית!</p></div>'}
+    </div>
+  </div>`);
+}
+
+function renderStudentSchedule(){
+  const D=S.data;const s=D.student;if(!s)return;
+  setPage('השיעורים שלי',D.group?.name||'');
+  const lessons=D.lessons.sort((a,b)=>a.lesson_date>b.lesson_date?-1:1);
+  setContent(`<div class="card"><div class="tbl-wrap"><table>
+    <thead><tr><th>תאריך</th><th>שעה</th><th>נושא</th><th>נוכחות</th><th>ציון</th></tr></thead>
+    <tbody>${lessons.map(l=>{const a=D.attendance.find(x=>x.lesson_id===l.id&&x.student_id===s.id);
+      return`<tr>
+        <td>${fmt(l.lesson_date)}</td><td>${l.start_time||'—'}</td><td>${l.topic||'—'}</td>
+        <td>${a?`<span class="badge ${a.present?'badge-green':'badge-red'}">${a.present?'✓':'✗'}</span>`:'—'}</td>
+        <td>${a?.score!=null?`<strong>${a.score}</strong>`:'—'}</td>
+      </tr>`;}).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--lgt);padding:32px">אין שיעורים</td></tr>'}
+    </tbody>
+  </table></div></div>`);
+}
+
+function renderStudentProgress(){
+  const D=S.data;const s=D.student;if(!s)return;
+  const scores=D.attendance.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1);
+  setPage('ההתקדמות שלי','');
+  setContent(`<div class="card"><div class="chart-wrap" style="height:300px"><canvas id="stChart"></canvas></div></div>`);
+  setTimeout(()=>{
+    const ctx=document.getElementById('stChart')?.getContext('2d');
+    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{label:'ציון',data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:5,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}}}});}
+    else if(ctx){document.querySelector('.card').innerHTML='<div class="empty"><div class="ei">📈</div><p>אין ציונים עדיין</p></div>';}
+  },100);
+}
+
+function renderStudentHomework(){
+  const D=S.data;const s=D.student;if(!s)return;
+  const hw=D.attendance.filter(a=>a.homework_assigned);
+  setPage('שיעורי בית','');
+  setContent(`<div class="card">
+    ${hw.reverse().map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
+      return`<div class="hw-item">
+        <div class="hw-cb ${a.homework_done?'done':''}" onclick="markHwDone('${a.lesson_id}','${s.id}',this,'${a.homework_done}')"></div>
+        <div style="flex:1"><div class="hw-text ${a.homework_done?'done':''}">${a.homework_assigned}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
+        <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'✓ הוגש':'ממתין'}</span>
+      </div>`;}).join('')||'<div class="empty"><div class="ei">🎉</div><p>אין שיעורי בית</p></div>'}
+  </div>`);
+}
+
+async function markHwDone(lid,sid,el,current){
+  const done=current!=='true'&&current!==true;
+  el.classList.toggle('done',done);
+  const txt=el.nextElementSibling?.querySelector('.hw-text');
+  if(txt)txt.classList.toggle('done',done);
+  await sb.from('attendance').update({homework_done:done}).eq('lesson_id',lid).eq('student_id',sid);
+  toast(done?'✓ סומן כהוגש':'סומן כממתין');
+}
+
+// ── BOOT ──
+sb.auth.onAuthStateChange((_,session)=>{
+  if(!session&&document.getElementById('app').style.display==='flex'){location.reload();}
+});
+init();
+</script>
+</body>
+</html>
