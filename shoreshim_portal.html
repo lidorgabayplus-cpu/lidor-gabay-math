@@ -321,84 +321,135 @@ tr:hover td{background:var(--bg)}
 .acc-name{font-size:.9rem;font-weight:700}
 .acc-email{font-size:.75rem;color:var(--lgt)}
 
+
+
 /* ═══════════════════════════════════════════
-   PORTAL MOBILE — max-width 768px
+   PORTAL MOBILE — CORRECT VERSION
+   Structure: #sidebar=position:fixed right
+              #main=margin-right:260px
 ═══════════════════════════════════════════ */
 @media(max-width:768px){
-  /* Layout: sidebar becomes bottom nav */
-  #app{flex-direction:column}
-  #sidebar{
-    width:100%;height:auto;
-    flex-direction:row;
-    position:fixed;bottom:0;left:0;right:0;z-index:200;
-    border-left:none;border-top:1px solid var(--brd);
-    padding:0;overflow:visible;
-    background:var(--glass);backdrop-filter:blur(20px);
-  }
-  .sb-logo,.sb-user,.sb-footer{display:none}
-  #sb-nav{
-    display:flex;flex-direction:row;
-    overflow-x:auto;width:100%;
-    padding:4px 8px;gap:0;
-    scrollbar-width:none;
-  }
-  #sb-nav::-webkit-scrollbar{display:none}
-  .sb-link{
-    flex-direction:column;min-width:64px;
-    padding:8px 6px;gap:3px;font-size:.62rem;
-    border-right:none;border-radius:10px;
-    white-space:nowrap;
-  }
-  .sb-link .sb-icon{font-size:1.2rem}
 
-  /* Main content */
-  #main{padding-bottom:80px;padding-top:0}
-  .page-header{padding:20px 16px 12px}
-  .page-header h2{font-size:1.3rem}
-  .content-body{padding:0 16px 16px}
-
-  /* Login box */
-  .login-box{padding:28px 20px;max-width:100%;margin:16px}
+  /* ── Login screen ── */
+  .login-box{
+    padding:24px 18px;
+    margin:12px;
+    width:calc(100% - 24px);
+    max-width:100%;
+    border-radius:20px;
+  }
   .login-logo img{height:70px}
+  .login-tabs{gap:2px}
+  .login-tab{font-size:.78rem;padding:9px 4px}
+  .lf-input{font-size:.9rem;padding:12px 14px}
+  .login-btn{padding:14px;font-size:.95rem}
 
-  /* KPI cards */
-  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
-  .kpi-card{padding:14px 12px}
-  .kpi-val{font-size:1.6rem}
+  /* ── Sidebar → bottom bar ── */
+  #sidebar{
+    top:auto !important;
+    right:0 !important;
+    left:0 !important;
+    bottom:0 !important;
+    width:100% !important;
+    height:62px !important;
+    flex-direction:row !important;
+    border-left:none !important;
+    border-top:1px solid var(--brd) !important;
+    box-shadow:0 -4px 20px rgba(58,91,240,0.08) !important;
+    overflow:hidden !important;
+  }
 
-  /* Tables — horizontal scroll */
-  .adm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .adm-table{min-width:600px}
+  /* Hide sidebar parts not needed in bottom bar */
+  .sb-logo,.sb-user,.sb-footer,.sb-section{display:none !important}
 
-  /* Student cards */
-  .student-cards{grid-template-columns:1fr}
+  /* Nav becomes horizontal scroller */
+  .sb-nav{
+    flex:1 !important;
+    display:flex !important;
+    flex-direction:row !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    padding:4px 6px !important;
+    gap:2px !important;
+    scrollbar-width:none !important;
+    align-items:center !important;
+  }
+  .sb-nav::-webkit-scrollbar{display:none}
+
+  /* Nav items become icon+label columns */
+  .sb-item{
+    flex-direction:column !important;
+    min-width:60px !important;
+    max-width:72px !important;
+    padding:6px 4px !important;
+    gap:3px !important;
+    font-size:.6rem !important;
+    white-space:nowrap !important;
+    border-radius:10px !important;
+    align-items:center !important;
+    text-align:center !important;
+    flex-shrink:0 !important;
+  }
+  .sb-item .icon{font-size:1.3rem !important;width:auto !important}
+  .sb-item .badge{display:none !important}
+
+  /* Main content: remove right margin, add bottom padding */
+  #main{
+    margin-right:0 !important;
+    padding-bottom:70px !important;
+    min-height:100vh !important;
+  }
+
+  /* Page header */
+  .page-header{
+    padding:14px 16px !important;
+    position:sticky;top:0;z-index:50;
+  }
+  .page-title{font-size:1.1rem !important}
+  .page-sub{font-size:.75rem !important}
+  .page-actions .btn{padding:7px 12px !important;font-size:.78rem !important}
+
+  /* Content area */
+  .content{padding:14px 14px !important}
+
+  /* KPI grid: 2 columns */
+  .kpi-grid{grid-template-columns:repeat(2,1fr) !important;gap:10px !important;margin-bottom:14px !important}
+  .kpi{padding:14px 12px !important}
+  .kpi-val{font-size:1.6rem !important}
+  .kpi-icon{font-size:1.3rem !important;margin-bottom:4px !important}
+
+  /* Tables */
+  .tbl-wrap{overflow-x:auto !important;-webkit-overflow-scrolling:touch}
+  table{min-width:520px}
+
+  /* Cards */
+  .card{padding:16px !important;border-radius:12px !important}
+  .card-sm{padding:12px !important}
 
   /* Modal */
-  .modal-box{width:calc(100% - 32px);max-height:90vh;overflow-y:auto}
-  
-  /* Dashboard cards */
-  .dash-grid{grid-template-columns:1fr}
-  
-  /* Groups grid */
-  .groups-grid{grid-template-columns:1fr}
-  
-  /* Schedule week grid */
-  .week-grid{grid-template-columns:1fr;gap:8px}
-  .day-col{min-width:auto}
+  .modal-box{
+    width:calc(100vw - 24px) !important;
+    max-height:88vh !important;
+    overflow-y:auto !important;
+    border-radius:20px !important;
+    padding:20px 16px !important;
+  }
 
   /* Charts */
-  canvas{max-width:100%}
-  
-  /* Accounts section */
-  .accounts-list{grid-template-columns:1fr}
+  canvas{max-width:100% !important;height:200px !important}
+
+  /* Grids → single column */
+  .groups-grid,.student-cards,.accounts-list{grid-template-columns:1fr !important}
+
+  /* Buttons row wrapping */
+  .page-actions{flex-wrap:wrap;gap:6px}
+  .btn{white-space:nowrap}
 }
 
-@media(max-width:480px){
-  .kpi-grid{grid-template-columns:1fr}
-  .login-tabs{gap:2px}
-  .login-tab{font-size:.75rem;padding:8px 4px}
-  .lf-input{font-size:.9rem;padding:12px}
-  .login-btn{font-size:.95rem;padding:14px}
+@media(max-width:400px){
+  .kpi-grid{grid-template-columns:1fr 1fr !important}
+  .sb-item{min-width:52px !important;font-size:.55rem !important}
+  .content{padding:10px !important}
 }
 </style>
 </head>
