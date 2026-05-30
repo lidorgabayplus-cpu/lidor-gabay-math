@@ -1484,6 +1484,47 @@ footer{
   .result-card{padding:16px 14px}
   .sc-btn{flex:0 0 calc(25% - 6px);font-size:.8rem;padding:6px 2px}
 }
+
+/* ─── CRITICAL MOBILE FIXES — inline style overrides ─── */
+@media(max-width:768px){
+  /* Charter 3 columns → 1 column */
+  #charter{padding:56px 16px!important}
+  #charter > .container > div[style*="grid-template-columns:repeat(3"]{
+    grid-template-columns:1fr!important;
+    gap:16px!important;
+  }
+
+  /* VS comparison 2 columns → 1 column */
+  #vs-tutor{padding:56px 16px!important}
+  #vs-tutor > .container > div[style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:1fr!important;
+    max-width:100%!important;
+  }
+
+  /* Section padding override for all inline-styled sections */
+  section[style*="padding:96px 56px"]{padding:56px 16px!important}
+  section[style*="padding:96px"]{padding:56px 16px!important}
+  
+  /* Nav overflow fix */
+  nav{overflow:hidden}
+  .nav-links{display:none!important}
+  
+  /* Why grid inline */
+  .why-grid{grid-template-columns:1fr!important}
+  .plans-grid{grid-template-columns:1fr!important}
+  
+  /* Fix text overflow everywhere */
+  *{word-break:break-word;overflow-wrap:break-word}
+  
+  /* Fix result cards area */
+  #results > .container > div[style*="grid"]{grid-template-columns:1fr!important}
+}
+
+@media(max-width:480px){
+  #charter > .container > div{grid-template-columns:1fr!important}
+  #vs-tutor > .container > div{grid-template-columns:1fr!important}
+  .why-card{padding:20px 14px}
+}
 </style>
 </head>
 <body>
