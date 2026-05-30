@@ -572,7 +572,14 @@ tr:hover td{background:var(--bg)}
 <script>
 const SU='https://iuzghbbccmiucixoayfz.supabase.co';
 const SK='sb_publishable_Dqb9AJaCyVEGBiXLqEmwCw_Xy-XHjRP';
-const sb=supabase.createClient(SU,SK);
+const sb=supabase.createClient(SU,SK,{
+  auth:{
+    persistSession:true,
+    autoRefreshToken:true,
+    storageKey:'shoreshim-portal-auth',
+    detectSessionInUrl:true
+  }
+});
 
 // ─── STATE ───
 let S={user:null,profile:null,data:{}};
@@ -580,6 +587,17 @@ let currentView='';
 
 // ─── INIT ───
 async function init(){
+  // Listen to auth state changes — auto-refresh token, handle sign-out
+  sb.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'||event==='USER_DELETED'){
+      S={user:null,profile:null,data:{}};
+      showLogin();
+    }
+    if(event==='TOKEN_REFRESHED'&&session){
+      S.user=session.user;
+    }
+  });
+
   const {data:{session}}=await sb.auth.getSession();
   if(!session){showLogin();return;}
   await loadProfile(session.user);
