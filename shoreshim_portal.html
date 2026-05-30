@@ -777,16 +777,17 @@ async function routeToPortal(view){
 }
 
 // ─── DATA LOAD ───
+async function safeQuery(query){try{const r=await query;return r;}catch(e){return {data:[],error:e};}}
 async function loadAll(){
   const [g,st,l,a,r]=await Promise.all([
-    sb.from('groups').select('*').order('created_at'),
-    sb.from('students').select('*').eq('active',true).order('name'),
-    sb.from('lessons').select('*').order('lesson_date,start_time'),
-    sb.from('attendance').select('*'),
-    sb.from('resources').select('*').order('created_at',{ascending:false}).catch(()=>({data:[]})),
+    safeQuery(sb.from('groups').select('*').order('created_at')),
+    safeQuery(sb.from('students').select('*').eq('active',true).order('name')),
+    safeQuery(sb.from('lessons').select('*').order('lesson_date,start_time')),
+    safeQuery(sb.from('attendance').select('*')),
+    safeQuery(sb.from('resources').select('*').order('created_at',{ascending:false})),
   ]);
-  if(g.error) toast('שגיאה בטעינת קבוצות: '+g.error.message,'error');
-  if(st.error) toast('שגיאה בטעינת תלמידים: '+st.error.message,'error');
+  if(g.error) toast('שגיאה בטעינת קבוצות: '+(g.error.message||''), 'error');
+  if(st.error) toast('שגיאה בטעינת תלמידים: '+(st.error.message||''), 'error');
   S.data={groups:g.data||[],students:st.data||[],lessons:l.data||[],attendance:a.data||[],resources:r.data||[]};
 }
 
