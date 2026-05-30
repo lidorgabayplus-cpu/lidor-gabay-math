@@ -282,17 +282,18 @@ tr:hover td{background:var(--bg)}
 
 /* ── TOAST ── */
 #toast{
-  position:fixed;bottom:24px;left:24px;z-index:999;
+  position:fixed;top:24px;left:24px;z-index:9999;
   background:var(--tx);color:#fff;
-  padding:12px 20px;border-radius:12px;
-  font-size:.88rem;font-weight:600;
-  transform:translateY(80px);opacity:0;
-  transition:all .3s ease;pointer-events:none;
-  max-width:320px;
+  padding:14px 22px;border-radius:14px;
+  font-size:.9rem;font-weight:600;
+  transform:translateY(-80px);opacity:0;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
+  max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.2);
 }
 #toast.show{transform:translateY(0);opacity:1}
 #toast.success{background:var(--gr)}
 #toast.error{background:var(--rd)}
+#toast.info{background:var(--bl)}
 
 /* ── MOBILE ── */
 #menuToggle{display:none;position:fixed;top:16px;left:16px;z-index:200;background:var(--bl);color:#fff;border:none;border-radius:10px;padding:10px 12px;font-size:1.1rem}
@@ -481,6 +482,10 @@ tr:hover td{background:var(--bg)}
       <div class="lf-group">
         <label class="lf-label">סיסמה</label>
         <input class="lf-input" type="password" id="loginPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="lf-group" style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <input type="checkbox" id="rememberMe" style="width:18px;height:18px;cursor:pointer;accent-color:var(--bl)"/>
+        <label for="rememberMe" style="color:rgba(255,255,255,.6);font-size:.84rem;cursor:pointer">זכור אותי</label>
       </div>
       <button class="login-btn" onclick="doLogin()" id="loginBtn">כניסה →</button>
       <div class="login-err" id="loginErr"></div>
@@ -773,15 +778,16 @@ async function routeToPortal(view){
 
 // ─── DATA LOAD ───
 async function loadAll(){
-  const [g,st,l,a,f,r]=await Promise.all([
+  const [g,st,l,a,r]=await Promise.all([
     sb.from('groups').select('*').order('created_at'),
     sb.from('students').select('*').eq('active',true).order('name'),
     sb.from('lessons').select('*').order('lesson_date,start_time'),
     sb.from('attendance').select('*'),
-    sb.from('files').select('*').order('uploaded_at',{ascending:false}),
-    sb.from('resources').select('*').order('created_at',{ascending:false}),
+    sb.from('resources').select('*').order('created_at',{ascending:false}).catch(()=>({data:[]})),
   ]);
-  S.data={groups:g.data||[],students:st.data||[],lessons:l.data||[],attendance:a.data||[],files:f.data||[],resources:r.data||[]};
+  if(g.error) toast('שגיאה בטעינת קבוצות: '+g.error.message,'error');
+  if(st.error) toast('שגיאה בטעינת תלמידים: '+st.error.message,'error');
+  S.data={groups:g.data||[],students:st.data||[],lessons:l.data||[],attendance:a.data||[],resources:r.data||[]};
 }
 
 async function loadParentData(){
@@ -822,8 +828,10 @@ function setContent(html){document.getElementById('content').innerHTML=html;}
 function toast(msg,type=''){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='show '+(type||'');
-  setTimeout(()=>t.className='',3000);
+  clearTimeout(t._tid);
+  t._tid=setTimeout(()=>t.className='',3500);
 }
+function showToast(msg,type='info'){toast(msg,type);}
 
 function openModal(html){
   document.getElementById('modalBox').innerHTML=html;
@@ -872,7 +880,9 @@ async function renderAdminDashboard(){
   setPage('לוח בקרה','סיכום יומי ומדדי אימפקט');
 
   const todayStr=today();
+  const monthStr=todayStr.substring(0,7); // YYYY-MM
   const todayLessons=D.lessons.filter(l=>l.lesson_date===todayStr);
+  const monthLessons=D.lessons.filter(l=>l.lesson_date&&l.lesson_date.startsWith(monthStr));
   const atRisk=D.students.filter(s=>riskLevel(s.id)==='high');
   const totalAtt=D.attendance.length?Math.round(D.attendance.filter(a=>a.present).length/D.attendance.length*100):0;
   const scores=D.attendance.filter(a=>a.score!=null).map(a=>a.score);
@@ -882,8 +892,8 @@ async function renderAdminDashboard(){
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-icon">🎒</div><div class="kpi-val">${D.students.length}</div><div class="kpi-label">תלמידים פעילים</div></div>
     <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val">${D.groups.length}</div><div class="kpi-label">קבוצות</div></div>
+    <div class="kpi"><div class="kpi-icon">📅</div><div class="kpi-val">${monthLessons.length}</div><div class="kpi-label">שיעורים החודש</div></div>
     <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val">${totalAtt}%</div><div class="kpi-label">נוכחות ממוצעת</div><div class="prog-bar" style="margin-top:8px"><div class="prog-fill" style="width:${totalAtt}%"></div></div></div>
-    <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-val">${avgSc??'—'}</div><div class="kpi-label">ציון ממוצע</div></div>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -969,7 +979,7 @@ async function renderGroups(){
         <div style="text-align:center"><div style="font-size:1.4rem;font-weight:900">${rate}%</div><div style="font-size:.7rem;color:var(--lgt)">נוכחות</div></div>
         <div style="text-align:center"><div style="font-size:1.4rem;font-weight:900">${g.lessons_per_month||8}</div><div style="font-size:.7rem;color:var(--lgt)">שיעורים/חודש</div></div>
       </div>
-      ${g.schedule_days?`<div style="font-size:.78rem;color:var(--mid);margin-top:10px">📅 ${g.schedule_days} · ${g.schedule_time||''}</div>`:''}
+      ${g.schedule_days&&g.schedule_days.length?`<div style="font-size:.78rem;color:var(--mid);margin-top:10px">📅 ${Array.isArray(g.schedule_days)?g.schedule_days.join(', '):g.schedule_days} · ${g.start_time||''}</div>`:''}
       <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%" onclick="go('schedule')">פתח לוח שבועי →</button>
     </div>`;}).join(''):'<div class="empty"><div class="ei">👥</div><p>אין קבוצות עדיין</p></div>'}
   </div>`);
@@ -978,14 +988,15 @@ async function renderGroups(){
 function openGroupModal(id){
   const g=id?S.data.groups.find(x=>x.id===id):{};
   const DAYS=['ראשון','שני','שלישי','רביעי','חמישי'];
-  const selDays=(g.schedule_days||'').split(',').filter(Boolean);
+  // schedule_days is a text[] in DB — handle both array and string
+  const selDays=Array.isArray(g.schedule_days)?g.schedule_days:(g.schedule_days||'').split(',').filter(Boolean);
   openModal(`
   <div class="modal-h">${id?'עריכת':'קבוצה חדשה'} <button class="modal-close" onclick="closeModal()">×</button></div>
   <div class="fg"><label>שם הקבוצה</label><input id="gName" value="${g.name||''}"/></div>
   <div class="fg"><label>תיאור</label><input id="gDesc" value="${g.description||''}"/></div>
   <div class="fg-row">
     <div class="fg"><label>שיעורים לחודש</label><input id="gLpm" type="number" value="${g.lessons_per_month||8}"/></div>
-    <div class="fg"><label>שעת שיעור</label><input id="gTime" type="time" value="${g.schedule_time||''}"/></div>
+    <div class="fg"><label>שעת שיעור</label><input id="gTime" type="time" value="${g.start_time||g.schedule_time||''}"/></div>
   </div>
   <div class="fg"><label>ימים קבועים</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
@@ -1001,17 +1012,28 @@ function openGroupModal(id){
 }
 
 async function saveGroup(id){
-  const days=[...document.querySelectorAll('.day-cb:checked')].map(c=>c.value).join(',');
-  const obj={name:document.getElementById('gName').value.trim(),description:document.getElementById('gDesc').value.trim(),lessons_per_month:parseInt(document.getElementById('gLpm').value)||8,schedule_time:document.getElementById('gTime').value,schedule_days:days,color:document.getElementById('gColor').value};
+  // schedule_days is text[] in Supabase — send as array
+  const daysArr=[...document.querySelectorAll('.day-cb:checked')].map(c=>c.value);
+  const obj={
+    name:document.getElementById('gName').value.trim(),
+    description:document.getElementById('gDesc').value.trim(),
+    lessons_per_month:parseInt(document.getElementById('gLpm').value)||8,
+    start_time:document.getElementById('gTime').value||null,
+    schedule_days:daysArr,
+    color:document.getElementById('gColor').value
+  };
   if(!obj.name){toast('שם הקבוצה חובה','error');return;}
-  if(id){await sb.from('groups').update(obj).eq('id',id);}
-  else{await sb.from('groups').insert(obj);}
+  let err;
+  if(id){({error:err}=await sb.from('groups').update(obj).eq('id',id));}
+  else{({error:err}=await sb.from('groups').insert(obj));}
+  if(err){toast('שגיאה: '+err.message,'error');return;}
   closeModal();toast('✓ קבוצה נשמרה','success');await renderGroups();
 }
 
 async function delGroup(id){
   if(!confirm('למחוק קבוצה זו?'))return;
-  await sb.from('groups').delete().eq('id',id);
+  const {error}=await sb.from('groups').delete().eq('id',id);
+  if(error){toast('שגיאה: '+error.message,'error');return;}
   toast('קבוצה נמחקה');await renderGroups();
 }
 </script>
@@ -1092,10 +1114,11 @@ function openStudentModal(id){
     </select>
   </div>
   <div class="fg-row">
+    <div class="fg"><label>שם הורה</label><input id="sParentName" value="${s.parent_name||''}"/></div>
     <div class="fg"><label>טלפון הורה</label><input id="sPhone" value="${s.parent_phone||''}"/></div>
-    <div class="fg"><label>אימייל הורה</label><input id="sParentEmail" value="${s.parent_email||''}"/></div>
   </div>
   <div class="fg-row">
+    <div class="fg"><label>מקצוע / נושא</label><input id="sSubject" value="${s.subject||''}"/></div>
     <div class="fg"><label>סוג מנוי</label>
       <select id="sSub">
         <option ${s.subscription_type==='חודשי'?'selected':''}>חודשי</option>
@@ -1103,7 +1126,6 @@ function openStudentModal(id){
         <option ${s.subscription_type==='מסובסד'?'selected':''}>מסובסד</option>
       </select>
     </div>
-    <div class="fg"><label>שיעורים לחודש</label><input id="sLpm" type="number" value="${s.lessons_per_month||8}"/></div>
   </div>
   <div class="fg-row">
     <div class="fg"><label>מחיר חודשי (₪)</label><input id="sPrice" type="number" value="${s.subscription_price||0}"/></div>
@@ -1121,24 +1143,27 @@ async function saveStudent(id){
     name:document.getElementById('sName').value.trim(),
     grade:document.getElementById('sGrade').value.trim(),
     group_id:document.getElementById('sGrp').value||null,
+    parent_name:document.getElementById('sParentName').value.trim(),
     parent_phone:document.getElementById('sPhone').value.trim(),
-    parent_email:document.getElementById('sParentEmail').value.trim(),
+    subject:document.getElementById('sSubject').value.trim(),
     subscription_type:document.getElementById('sSub').value,
-    lessons_per_month:parseInt(document.getElementById('sLpm').value)||8,
     subscription_price:parseInt(document.getElementById('sPrice').value)||0,
     subscription_renewal:document.getElementById('sRenew').value||null,
     notes:document.getElementById('sNotes').value.trim(),
     active:true,
   };
   if(!obj.name){toast('שם חובה','error');return;}
-  if(id){await sb.from('students').update(obj).eq('id',id);}
-  else{obj.join_date=today();await sb.from('students').insert(obj);}
+  let err;
+  if(id){({error:err}=await sb.from('students').update(obj).eq('id',id));}
+  else{({error:err}=await sb.from('students').insert(obj));}
+  if(err){toast('שגיאה: '+err.message,'error');return;}
   closeModal();toast('✓ תלמיד נשמר','success');await renderStudents();
 }
 
 async function delStudent(id){
   if(!confirm('למחוק תלמיד זה?'))return;
-  await sb.from('students').update({active:false}).eq('id',id);
+  const {error}=await sb.from('students').update({active:false}).eq('id',id);
+  if(error){toast('שגיאה: '+error.message,'error');return;}
   toast('תלמיד הוסר');await renderStudents();
 }
 
@@ -1235,7 +1260,7 @@ async function genWeekLessons(){
   const ws=weekStart(wOff);
   let created=0;
   for(const g of D.groups){
-    const days=(g.schedule_days||'').split(',').filter(Boolean);
+    const days=Array.isArray(g.schedule_days)?g.schedule_days:(g.schedule_days||'').split(',').filter(Boolean);
     for(let i=0;i<5;i++){
       const dayName=DAYS_HE[i];
       if(!days.includes(dayName))continue;
@@ -1243,7 +1268,8 @@ async function genWeekLessons(){
       const dateStr=fmtDate(d);
       const exists=D.lessons.find(l=>l.group_id===g.id&&l.lesson_date===dateStr);
       if(exists)continue;
-      const {data:lesson}=await sb.from('lessons').insert({group_id:g.id,lesson_date:dateStr,start_time:g.schedule_time||null,duration:90}).select().single();
+      const {data:lesson,error:lerr}=await sb.from('lessons').insert({group_id:g.id,lesson_date:dateStr,start_time:g.start_time||null,duration:90}).select().single();
+      if(lerr){toast('שגיאה ביצירת שיעור: '+lerr.message,'error');continue;}
       if(lesson){
         const students=D.students.filter(s=>s.group_id===g.id);
         if(students.length)await sb.from('attendance').insert(students.map(s=>({lesson_id:lesson.id,student_id:s.id,present:true})));
@@ -1320,7 +1346,11 @@ async function openLessonModal(lid){
         </div>
         <div class="att-fields">
           <input class="att-score" type="number" min="0" max="100" placeholder="ציון" value="${a.score??''}" onchange="saveAttField('${lid}','${s.id}','score',this.value)" ${!a.present?'disabled':''}/>
-          <input class="att-note" placeholder="הערה..." value="${a.att_notes||''}" onchange="saveAttField('${lid}','${s.id}','att_notes',this.value)" ${!a.present?'disabled':''}/>
+          <input class="att-note" placeholder="הערה..." value="${a.notes||''}" onchange="saveAttField('${lid}','${s.id}','notes',this.value)" ${!a.present?'disabled':''}/>
+          <input class="att-note" placeholder="שיעורי בית..." value="${a.homework||''}" onchange="saveAttField('${lid}','${s.id}','homework',this.value)" style="min-width:140px" ${!a.present?'disabled':''}/>
+          <label style="font-size:.78rem;display:flex;align-items:center;gap:4px;cursor:pointer">
+            <input type="checkbox" ${a.homework_done?'checked':''} onchange="saveAttField('${lid}','${s.id}','homework_done',this.checked)"/> הוגש
+          </label>
         </div>
       </div>`;}).join('')||'<div class="empty"><p>אין תלמידים בקבוצה</p></div>'}
   </div>
@@ -1349,10 +1379,15 @@ async function toggleAtt(lid,sid,present,btn){
 }
 
 async function saveAttField(lid,sid,field,value){
-  const val=field==='score'?(value===''?null:parseInt(value)):value;
+  let val;
+  if(field==='score') val=value===''?null:parseInt(value);
+  else if(field==='homework_done') val=Boolean(value);
+  else val=value;
   const exists=S.data.attendance.find(a=>a.lesson_id===lid&&a.student_id===sid);
-  if(exists){await sb.from('attendance').update({[field]:val}).eq('lesson_id',lid).eq('student_id',sid);}
-  else{await sb.from('attendance').insert({lesson_id:lid,student_id:sid,present:true,[field]:val});}
+  let err;
+  if(exists){({error:err}=await sb.from('attendance').update({[field]:val}).eq('lesson_id',lid).eq('student_id',sid));}
+  else{({error:err}=await sb.from('attendance').insert({lesson_id:lid,student_id:sid,present:true,[field]:val}));}
+  if(err) toast('שגיאה בשמירה: '+err.message,'error');
 }
 
 async function delLesson(lid){
@@ -1425,8 +1460,8 @@ async function genReport(sid){
     return{date:l?.lesson_date||'',score:a.score,topic:l?.topic||''};
   }).sort((a,b)=>a.date>b.date?1:-1);
   const avgSc=scores.length?Math.round(scores.reduce((a,b)=>a+b.score,0)/scores.length):null;
+  const hwTotal=att.filter(a=>a.homework).length;
   const hw=att.filter(a=>a.homework_done).length;
-  const hwTotal=att.filter(a=>a.homework_assigned).length;
 
   const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"/>
@@ -1666,7 +1701,8 @@ async function renderAccounts(){
 }
 
 async function changeRole(uid,role){
-  await sb.from('profiles').update({role}).eq('id',uid);
+  const {error}=await sb.from('profiles').update({role}).eq('id',uid);
+  if(error){toast('שגיאה: '+error.message,'error');return;}
   toast(`✓ תפקיד שונה ל${role==='admin'?'מנהל':role==='parent'?'הורה':'תלמיד'}`,'success');
 }
 
@@ -1674,7 +1710,8 @@ async function linkParentToStudent(){
   const sid=document.getElementById('linkSt').value;
   const pid=document.getElementById('linkParent').value.trim();
   if(!sid||!pid){toast('בחר תלמיד והזן ID הורה','error');return;}
-  await sb.from('students').update({parent_user_id:pid}).eq('id',sid);
+  const {error}=await sb.from('students').update({parent_user_id:pid}).eq('id',sid);
+  if(error){toast('שגיאה: '+error.message,'error');return;}
   toast('✓ הורה שויך לתלמיד','success');
 }
 
@@ -1682,7 +1719,8 @@ async function linkStudentUser(){
   const sid=document.getElementById('linkStSelf').value;
   const uid=document.getElementById('linkStudentUser').value.trim();
   if(!sid||!uid){toast('בחר תלמיד והזן ID','error');return;}
-  await sb.from('students').update({user_id:uid}).eq('id',sid);
+  const {error}=await sb.from('students').update({user_id:uid}).eq('id',sid);
+  if(error){toast('שגיאה: '+error.message,'error');return;}
   toast('✓ תלמיד שויך לחשבון','success');
 }
 
@@ -1727,12 +1765,13 @@ async function createAccount(){
 
   // Insert profile manually in case trigger is slow
   if(data.user){
-    await sb.from('profiles').upsert({id:data.user.id,full_name:name,role,avatar_color:rndColor()});
+    const {error:perr}=await sb.from('profiles').upsert({id:data.user.id,full_name:name,role,email,avatar_color:rndColor()},{onConflict:'id'});
+    if(perr) console.warn('Profile upsert warning:',perr.message);
   }
 
   closeModal();
   toast(`✓ חשבון נוצר! שלח את הסיסמה הזמנית: ${pwd}`,'success');
-  setTimeout(()=>renderAccounts(),1000);
+  setTimeout(()=>renderAccounts(),1200);
 }
 
 // ══════════════════════════════════════
@@ -1781,12 +1820,12 @@ function renderParentDashboard(){
     </div>
     <div class="card" style="grid-column:1/-1">
       <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">📝 שיעורי הבית האחרונים</h3>
-      ${att.filter(a=>a.homework_assigned).slice(-5).reverse().map(a=>{
+      ${att.filter(a=>a.homework).slice(-5).reverse().map(a=>{
         const l=D.lessons.find(x=>x.id===a.lesson_id);
         return`<div class="hw-item">
           <div class="hw-cb ${a.homework_done?'done':''}"></div>
           <div style="flex:1">
-            <div class="hw-text ${a.homework_done?'done':''}">${a.homework_assigned}</div>
+            <div class="hw-text ${a.homework_done?'done':''}">${a.homework}</div>
             <div class="hw-date">${fmt(l?.lesson_date)}</div>
           </div>
           <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'הוגש':'ממתין'}</span>
@@ -1819,7 +1858,7 @@ function renderParentAttendance(){
             <td>${fmt(l?.lesson_date)}</td><td>${g?.name||'—'}</td><td>${l?.topic||'—'}</td>
             <td><span class="badge ${a.present?'badge-green':'badge-red'}">${a.present?'✓ נוכח':'✗ נעדר'}</span></td>
             <td>${a.score!=null?`<strong>${a.score}</strong>`:'—'}</td>
-            <td style="font-size:.82rem;color:var(--mid)">${a.att_notes||'—'}</td>
+            <td style="font-size:.82rem;color:var(--mid)">${a.notes||'—'}</td>
           </tr>`;}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--lgt);padding:32px">אין נתונים</td></tr>'}
       </tbody>
     </table></div>
@@ -1840,13 +1879,13 @@ function renderParentProgress(){
 
 function renderParentHomework(){
   const D=S.data;const child=D.children?.[0];if(!child)return;
-  const att=D.attendance.filter(a=>a.student_id===child.id&&a.homework_assigned);
+  const att=D.attendance.filter(a=>a.student_id===child.id&&a.homework);
   setPage('שיעורי בית',child.name);
   setContent(`<div class="card">
     ${att.reverse().map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
       return`<div class="hw-item">
         <div class="hw-cb ${a.homework_done?'done':''}"></div>
-        <div style="flex:1"><div class="hw-text ${a.homework_done?'done':''}">${a.homework_assigned}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
+        <div style="flex:1"><div class="hw-text ${a.homework_done?'done':''}">${a.homework}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
         <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'✓ הוגש':'ממתין'}</span>
       </div>`;}).join('')||'<div class="empty"><div class="ei">📝</div><p>אין שיעורי בית</p></div>'}
   </div>`);
@@ -1874,4 +1913,76 @@ async function genParentReport(sid){
 
 // ══════════════════════════════════════
 //  STUDENT PORTAL
-// ═══════════════════════════�
+
+// ══════════════════════════════════════
+//  STUDENT PORTAL
+// ══════════════════════════════════════
+function renderStudentDashboard(){
+  const D=S.data;const st=D.student;
+  if(!st){setPage('שלום!','');setContent(`<div class="empty"><div class="ei">👋</div><p>חשבונך עדיין לא שויך לתלמיד. פנה למנטור.</p></div>`);return;}
+  const att=D.attendance||[];
+  const rate=att.length?Math.round(att.filter(a=>a.present).length/att.length*100):0;
+  const sc=avgScoreArr(att);
+  const pres=att.filter(a=>a.present).length;
+  setPage(`שלום ${st.name}!`,'הדף האישי שלך');
+  setContent(`
+  <div class="parent-hero">
+    <div class="parent-child-name">${st.name}</div>
+    <div class="parent-child-group">קבוצה: ${D.group?.name||'—'} · כיתה: ${st.grade||'—'}</div>
+    <div class="parent-stats">
+      <div class="parent-stat"><div class="parent-stat-val" style="color:${rate<60?'#FF4D6D':rate<80?'#FF9A3C':'#C1FF00'}">${rate}%</div><div class="parent-stat-lbl">נוכחות</div></div>
+      <div class="parent-stat"><div class="parent-stat-val">${sc??'—'}</div><div class="parent-stat-lbl">ציון ממוצע</div></div>
+      <div class="parent-stat"><div class="parent-stat-val">${pres}</div><div class="parent-stat-lbl">שיעורים</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">📈 ציונים אחרונים</h3>
+    <div class="chart-wrap"><canvas id="stChart"></canvas></div>
+  </div>`);
+  const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1).slice(-10);
+  setTimeout(()=>{
+    const ctx=document.getElementById('stChart')?.getContext('2d');
+    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:4,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});}
+  },100);
+}
+
+function renderStudentSchedule(){
+  const D=S.data;const st=D.student;if(!st)return;
+  const upcoming=D.lessons.filter(l=>l.lesson_date>=today()).slice(0,10);
+  setPage('השיעורים שלי','');
+  setContent(`<div class="card"><div class="tbl-wrap"><table>
+    <thead><tr><th>תאריך</th><th>שעה</th><th>נושא</th></tr></thead>
+    <tbody>${upcoming.map(l=>`<tr><td>${fmt(l.lesson_date)}</td><td>${l.start_time||'—'}</td><td>${l.topic||'—'}</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--lgt);padding:32px">אין שיעורים קרובים</td></tr>'}</tbody>
+  </table></div></div>`);
+}
+
+function renderStudentProgress(){
+  const D=S.data;const st=D.student;if(!st)return;
+  const att=D.attendance||[];
+  const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1);
+  setPage('ההתקדמות שלי','');
+  setContent(`<div class="card"><div class="chart-wrap" style="height:300px"><canvas id="stProgChart"></canvas></div></div>`);
+  setTimeout(()=>{
+    const ctx=document.getElementById('stProgChart')?.getContext('2d');
+    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{label:'ציון',data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:5,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}}}});}
+  },100);
+}
+
+function renderStudentHomework(){
+  const D=S.data;const st=D.student;if(!st)return;
+  const att=(D.attendance||[]).filter(a=>a.homework);
+  setPage('שיעורי בית','');
+  setContent(`<div class="card">
+    ${att.slice().reverse().map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
+      return`<div class="hw-item">
+        <div class="hw-cb ${a.homework_done?'done':''}"></div>
+        <div style="flex:1"><div class="hw-text ${a.homework_done?'done':''}">${a.homework||'שיעורי בית'}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
+        <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'✓ הוגש':'ממתין'}</span>
+      </div>`;}).join('')||'<div class="empty"><div class="ei">📝</div><p>אין שיעורי בית</p></div>'}
+  </div>`);
+}
+
+init();
+</script>
+</body>
+</html>
