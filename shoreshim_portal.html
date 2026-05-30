@@ -320,6 +320,86 @@ tr:hover td{background:var(--bg)}
 .acc-info{flex:1}
 .acc-name{font-size:.9rem;font-weight:700}
 .acc-email{font-size:.75rem;color:var(--lgt)}
+
+/* ═══════════════════════════════════════════
+   PORTAL MOBILE — max-width 768px
+═══════════════════════════════════════════ */
+@media(max-width:768px){
+  /* Layout: sidebar becomes bottom nav */
+  #app{flex-direction:column}
+  #sidebar{
+    width:100%;height:auto;
+    flex-direction:row;
+    position:fixed;bottom:0;left:0;right:0;z-index:200;
+    border-left:none;border-top:1px solid var(--brd);
+    padding:0;overflow:visible;
+    background:var(--glass);backdrop-filter:blur(20px);
+  }
+  .sb-logo,.sb-user,.sb-footer{display:none}
+  #sb-nav{
+    display:flex;flex-direction:row;
+    overflow-x:auto;width:100%;
+    padding:4px 8px;gap:0;
+    scrollbar-width:none;
+  }
+  #sb-nav::-webkit-scrollbar{display:none}
+  .sb-link{
+    flex-direction:column;min-width:64px;
+    padding:8px 6px;gap:3px;font-size:.62rem;
+    border-right:none;border-radius:10px;
+    white-space:nowrap;
+  }
+  .sb-link .sb-icon{font-size:1.2rem}
+
+  /* Main content */
+  #main{padding-bottom:80px;padding-top:0}
+  .page-header{padding:20px 16px 12px}
+  .page-header h2{font-size:1.3rem}
+  .content-body{padding:0 16px 16px}
+
+  /* Login box */
+  .login-box{padding:28px 20px;max-width:100%;margin:16px}
+  .login-logo img{height:70px}
+
+  /* KPI cards */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-card{padding:14px 12px}
+  .kpi-val{font-size:1.6rem}
+
+  /* Tables — horizontal scroll */
+  .adm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .adm-table{min-width:600px}
+
+  /* Student cards */
+  .student-cards{grid-template-columns:1fr}
+
+  /* Modal */
+  .modal-box{width:calc(100% - 32px);max-height:90vh;overflow-y:auto}
+  
+  /* Dashboard cards */
+  .dash-grid{grid-template-columns:1fr}
+  
+  /* Groups grid */
+  .groups-grid{grid-template-columns:1fr}
+  
+  /* Schedule week grid */
+  .week-grid{grid-template-columns:1fr;gap:8px}
+  .day-col{min-width:auto}
+
+  /* Charts */
+  canvas{max-width:100%}
+  
+  /* Accounts section */
+  .accounts-list{grid-template-columns:1fr}
+}
+
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr}
+  .login-tabs{gap:2px}
+  .login-tab{font-size:.75rem;padding:8px 4px}
+  .lf-input{font-size:.9rem;padding:12px}
+  .login-btn{font-size:.95rem;padding:14px}
+}
 </style>
 </head>
 <body>
