@@ -1258,12 +1258,14 @@ footer{
 }
 .intro-skip {
   position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
-  font-size: .75rem; color: rgba(255,255,255,.25);
+  font-size: .85rem; color: rgba(255,255,255,.55);
   cursor: pointer; letter-spacing: .08em;
-  background: none; border: none; font-family: inherit;
-  transition: color .3s;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+  padding: 8px 20px; border-radius: 100px;
+  font-family: inherit;
+  transition: all .3s;
 }
-.intro-skip:hover { color: rgba(255,255,255,.6); }
+.intro-skip:hover { color: #fff; background: rgba(255,255,255,0.15); }
 
 /* ─── HOW IT WORKS STEPS ─── */
 .how-step{
@@ -2835,4 +2837,38 @@ function toggleFaq(btn) {
 // ── Intro animation ──────────────────────────────────────────────────────────
 function exitIntro(){
   const overlay = document.getElementById('intro-overlay');
-  if(!overlay || overlay.classList.contains('e
+  if(!overlay || overlay.classList.contains('exit')) return;
+  overlay.classList.add('exit');
+  setTimeout(() => { if(overlay.parentNode) overlay.remove(); }, 1100);
+}
+
+(function(){
+  const symbols = ['π','∑','√','∫','×','÷','=','²','³','∞','Δ','θ','α','β','∂','±'];
+  const container = document.getElementById('introParticles');
+  if(container) {
+    for(let i=0;i<28;i++){
+      const p = document.createElement('span');
+      p.className = 'intro-particle';
+      p.textContent = symbols[i % symbols.length];
+      const size = 14 + Math.random() * 24;
+      p.style.cssText = 'font-size:'+size+'px;left:'+(Math.random()*100)+'%;animation-duration:'+(6+Math.random()*8)+'s;animation-delay:'+(-Math.random()*8)+'s;opacity:'+(0.15+Math.random()*0.3)+';';
+      container.appendChild(p);
+    }
+  }
+  const lines = ['iLine1','iLine2','iLine3','iLine4'];
+  const delays = [300, 700, 1200, 1500];
+  lines.forEach(function(id,i){
+    setTimeout(function(){
+      const el = document.getElementById(id);
+      if(el) el.classList.add('show');
+    }, delays[i]);
+  });
+  setTimeout(function(){
+    const bar = document.getElementById('introBar');
+    if(bar) bar.style.width = '100%';
+  }, 800);
+  setTimeout(exitIntro, 2000);
+})();
+</script>
+</body>
+</html>
