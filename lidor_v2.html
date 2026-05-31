@@ -93,6 +93,15 @@ nav.solid{
   box-shadow:0 4px 20px rgba(58,91,240,0.35);
 }
 .nav-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(58,91,240,0.45)}
+.nav-login-btn{
+  font-family:'Rubik',sans-serif;font-weight:600;font-size:.85rem;
+  color:var(--blue);text-decoration:none;
+  padding:9px 18px;border-radius:100px;
+  border:1.5px solid rgba(58,91,240,0.35);
+  background:rgba(58,91,240,0.05);
+  transition:all .2s;white-space:nowrap;
+}
+.nav-login-btn:hover{background:rgba(58,91,240,0.1);border-color:var(--blue)}
 
 /* ─── HERO ─── */
 #hero{
@@ -1554,6 +1563,7 @@ footer{
     <a href="#about" class="nav-link">אודות</a>
     <a href="#testimonials" class="nav-link">המלצות</a>
     <a href="#how" class="nav-link">איך זה עובד</a>
+    <a href="/portal" class="nav-login-btn">כניסה 🔐</a>
     <a href="#survey" class="nav-btn">השאירו פרטים</a>
   </div>
 </nav>
@@ -2521,6 +2531,14 @@ document.getElementById('tmLightbox').addEventListener('click', e => {
   </div>
 </section>
 
+<!-- PORTAL ENTRY STRIP -->
+<div style="background:var(--dark);border-top:1px solid rgba(255,255,255,0.06);padding:20px 32px;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap">
+  <span style="color:rgba(255,255,255,0.45);font-size:.88rem">כבר חלק ממשפחת שורשים?</span>
+  <a href="/portal" style="display:inline-flex;align-items:center;gap:8px;background:rgba(58,91,240,0.15);border:1px solid rgba(58,91,240,0.35);color:#6B8EFF;padding:8px 20px;border-radius:100px;font-weight:700;font-size:.85rem;text-decoration:none;transition:all .2s;font-family:'Rubik',sans-serif" onmouseover="this.style.background='rgba(58,91,240,0.25)'" onmouseout="this.style.background='rgba(58,91,240,0.15)'">
+    🔐 כניסה להורים ותלמידים
+  </a>
+</div>
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">לידור גבאי | מרכז מתמטיקה</div>
@@ -2817,38 +2835,4 @@ function toggleFaq(btn) {
 // ── Intro animation ──────────────────────────────────────────────────────────
 function exitIntro(){
   const overlay = document.getElementById('intro-overlay');
-  if(!overlay || overlay.classList.contains('exit')) return;
-  overlay.classList.add('exit');
-  setTimeout(() => { if(overlay.parentNode) overlay.remove(); }, 1100);
-}
-
-(function(){
-  const symbols = ['π','∑','√','∫','×','÷','=','²','³','∞','Δ','θ','α','β','∂','±'];
-  const container = document.getElementById('introParticles');
-  if(container) {
-    for(let i=0;i<28;i++){
-      const p = document.createElement('span');
-      p.className = 'intro-particle';
-      p.textContent = symbols[i % symbols.length];
-      const size = 14 + Math.random() * 24;
-      p.style.cssText = 'font-size:'+size+'px;left:'+(Math.random()*100)+'%;animation-duration:'+(6+Math.random()*8)+'s;animation-delay:'+(-Math.random()*8)+'s;opacity:'+(0.15+Math.random()*0.3)+';';
-      container.appendChild(p);
-    }
-  }
-  const lines = ['iLine1','iLine2','iLine3','iLine4'];
-  const delays = [300, 700, 1200, 1500];
-  lines.forEach(function(id,i){
-    setTimeout(function(){
-      const el = document.getElementById(id);
-      if(el) el.classList.add('show');
-    }, delays[i]);
-  });
-  setTimeout(function(){
-    const bar = document.getElementById('introBar');
-    if(bar) bar.style.width = '100%';
-  }, 1600);
-  setTimeout(exitIntro, 3200);
-})();
-</script>
-</body>
-</html>
+  if(!overlay || overlay.classList.contains('e
