@@ -610,10 +610,22 @@ async function init(){
 
 async function loadProfile(user){
   S.user=user;
-  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
-  S.profile=p||{role:'student',full_name:user.email};
-  // בדיקת חסימה
-  if(p && p.is_active===false){
+  const {data:p, error:pErr}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  if(pErr || !p){
+    // פרופיל לא נמצא — נסה שוב פעם אחת
+    await new Promise(r=>setTimeout(r,1000));
+    const {data:p2}=await sb.from('profiles').select('*').eq('id',user.id).single();
+    if(!p2){
+      // עדיין לא נמצא — צור פרופיל חדש
+      await sb.from('profiles').upsert({id:user.id,role:'student',full_name:user.email,is_active:true});
+      S.profile={role:'student',full_name:user.email,is_active:true};
+    } else {
+      S.profile=p2;
+    }
+  } else {
+    S.profile=p;
+  }
+  if(S.profile.is_active===false){
     await sb.auth.signOut();
     const err=document.getElementById('loginErr');
     if(err) err.textContent='החשבון שלך מושהה. פנה למנהל המרכז.';
