@@ -93,6 +93,9 @@ nav.solid{
   box-shadow:0 4px 20px rgba(58,91,240,0.35);
 }
 .nav-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(58,91,240,0.45)}
+.nav-hamburger{display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:6px}
+.nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all .3s}
+nav.solid .nav-hamburger span{background:var(--text)}
 .nav-login-btn{
   font-family:'Rubik',sans-serif;font-weight:600;font-size:.85rem;
   color:var(--blue);text-decoration:none;
@@ -1516,16 +1519,27 @@ footer{
   section[style*="padding:96px 56px"]{padding:56px 16px!important}
   section[style*="padding:96px"]{padding:56px 16px!important}
   
-  /* Nav overflow fix */
-  nav{overflow:hidden}
-  .nav-links{display:none!important}
-  
+  /* Nav mobile */
+  nav{overflow:visible;padding:10px 16px;flex-wrap:nowrap}
+  .nav-link{display:none!important}
+  .nav-login-btn{display:none!important}
+  .nav-btn{white-space:nowrap!important;padding:9px 16px!important;font-size:.82rem!important}
+  .nav-right{gap:8px!important;flex-wrap:nowrap!important;align-items:center}
+  .nav-hamburger{display:flex!important}
+  /* Mobile menu open */
+  .mobile-menu{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,9,30,.97);flex-direction:column;align-items:center;justify-content:center;gap:28px}
+  .mobile-menu.open{display:flex}
+  .mobile-menu a{color:#fff;font-size:1.4rem;font-weight:700;text-decoration:none}
+  .mobile-menu .mm-login{background:var(--blue);padding:14px 40px;border-radius:100px;color:#fff!important}
+  .mobile-menu .mm-cta{background:var(--lime);color:var(--dark)!important;padding:14px 40px;border-radius:100px;font-weight:900}
+  .mobile-menu .mm-close{position:absolute;top:24px;left:24px;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.8rem;cursor:pointer}
+
   /* Why grid inline */
   .why-grid{grid-template-columns:1fr!important}
   .plans-grid{grid-template-columns:1fr!important}
-  
-  /* Fix text overflow everywhere */
-  *{word-break:break-word;overflow-wrap:break-word}
+
+  /* Fix text overflow — exempt nav */
+  *:not(nav):not(nav *){word-break:break-word;overflow-wrap:break-word}
   
   /* Fix result cards area */
   #results > .container > div[style*="grid"]{grid-template-columns:1fr!important}
@@ -1555,6 +1569,16 @@ footer{
 </div>
 
 
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mm-close" onclick="closeMobileMenu()">✕</button>
+  <a href="#about" onclick="closeMobileMenu()">אודות</a>
+  <a href="#testimonials" onclick="closeMobileMenu()">המלצות</a>
+  <a href="#how" onclick="closeMobileMenu()">איך זה עובד</a>
+  <a href="/portal" class="mm-login">כניסה 🔐</a>
+  <a href="#survey" class="mm-cta" onclick="closeMobileMenu()">השאירו פרטים</a>
+</div>
+
 <!-- NAV -->
 <nav id="mainNav">
   <a href="#" class="nav-logo">
@@ -1567,6 +1591,9 @@ footer{
     <a href="#how" class="nav-link">איך זה עובד</a>
     <a href="/portal" class="nav-login-btn">כניסה 🔐</a>
     <a href="#survey" class="nav-btn">השאירו פרטים</a>
+    <button class="nav-hamburger" onclick="openMobileMenu()" aria-label="תפריט">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
@@ -2833,6 +2860,10 @@ function toggleFaq(btn) {
   document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
 }
+
+// ── Mobile menu ──────────────────────────────────────────────────────────────
+function openMobileMenu(){document.getElementById('mobileMenu').classList.add('open');document.body.style.overflow='hidden';}
+function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.body.style.overflow='';}
 
 // ── Intro animation ──────────────────────────────────────────────────────────
 function exitIntro(){
