@@ -612,6 +612,13 @@ async function loadProfile(user){
   S.user=user;
   const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
   S.profile=p||{role:'student',full_name:user.email};
+  // בדיקת חסימה
+  if(p && p.is_active===false){
+    await sb.auth.signOut();
+    const err=document.getElementById('loginErr');
+    if(err) err.textContent='החשבון שלך מושהה. פנה למנהל המרכז.';
+    return;
+  }
   hideLogin();
   renderShell();
   await routeToPortal();
@@ -1639,29 +1646,36 @@ async function renderAccounts(){
   <div class="card">
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>שם</th><th>תפקיד</th><th>מזהה משתמש (ID)</th><th>שויך ל</th><th>שינוי תפקיד</th></tr></thead>
+        <thead><tr><th>שם</th><th>תפקיד</th><th>סטטוס</th><th>שויך ל</th><th>שינוי תפקיד</th><th>פעולות</th></tr></thead>
         <tbody>
         ${(profiles||[]).map(p=>{
           const linked=p.role==='parent'?S.data.students.filter(s=>s.parent_user_id===p.id).map(s=>s.name).join(', '):
                         p.role==='student'?S.data.students.find(s=>s.user_id===p.id)?.name||'—':'—';
-          return`<tr>
+          const isBlocked=p.is_active===false;
+          return`<tr style="${isBlocked?'opacity:.55':''}">
             <td>
               <div style="display:flex;align-items:center;gap:8px">
-                <div class="acc-avatar" style="background:${p.avatar_color||'var(--bl)'};">${(p.full_name||'?').charAt(0).toUpperCase()}</div>
+                <div class="acc-avatar" style="background:${isBlocked?'#aaa':(p.avatar_color||'var(--bl)')};">${(p.full_name||'?').charAt(0).toUpperCase()}</div>
                 <strong>${p.full_name||'—'}</strong>
               </div>
             </td>
             <td><span class="badge ${roleColor[p.role]||'badge-gray'}">${roleLabel[p.role]||p.role}</span></td>
-            <td style="font-size:.82rem;color:var(--mid)">${p.id}</td>
+            <td>${isBlocked?'<span class="badge badge-red">חסום</span>':'<span class="badge badge-green">פעיל</span>'}</td>
             <td style="font-size:.82rem">${linked||'—'}</td>
             <td>
-              <select onchange="changeRole('${p.id}',this.value)" style="padding:6px 10px;border:1.5px solid var(--brd);border-radius:8px;font-size:.82rem;outline:none">
+              <select onchange="changeRole('${p.id}',this.value)" style="padding:6px 10px;border:1.5px solid var(--brd);border-radius:8px;font-size:.82rem;outline:none" ${p.role==='admin'&&p.id===S.user.id?'disabled':''}>
                 <option value="admin" ${p.role==='admin'?'selected':''}>מנהל</option>
                 <option value="parent" ${p.role==='parent'?'selected':''}>הורה</option>
                 <option value="student" ${p.role==='student'?'selected':''}>תלמיד</option>
               </select>
             </td>
-          </tr>`;}).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--lgt);padding:32px">אין משתמשים רשומים</td></tr>'}
+            <td>
+              ${p.id===S.user.id?'<span style="font-size:.8rem;color:var(--lgt)">אתה</span>':`
+              <button onclick="blockUser('${p.id}',${!isBlocked})" class="btn ${isBlocked?'btn-primary':'btn-ghost'}" style="font-size:.78rem;padding:5px 12px">
+                ${isBlocked?'✓ בטל חסימה':'🔒 חסום'}
+              </button>`}
+            </td>
+          </tr>`;}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--lgt);padding:32px">אין משתמשים רשומים</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -1705,6 +1719,13 @@ async function changeRole(uid,role){
   const {error}=await sb.from('profiles').update({role}).eq('id',uid);
   if(error){toast('שגיאה: '+error.message,'error');return;}
   toast(`✓ תפקיד שונה ל${role==='admin'?'מנהל':role==='parent'?'הורה':'תלמיד'}`,'success');
+}
+
+async function blockUser(uid,block){
+  const {error}=await sb.from('profiles').update({is_active:!block}).eq('id',uid);
+  if(error){toast('שגיאה: '+error.message,'error');return;}
+  toast(block?'🔒 המשתמש נחסם':'✓ החסימה בוטלה',block?'error':'success');
+  await renderAccounts();
 }
 
 async function linkParentToStudent(){
