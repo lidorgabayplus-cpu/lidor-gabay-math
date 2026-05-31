@@ -850,6 +850,64 @@ footer{
   position:fixed;bottom:32px;left:32px;z-index:500;
   display:flex;align-items:center;gap:12px;
 }
+/* ─── SHORSHI CHARACTER ─── */
+#shorshi-wrap{
+  position:fixed;bottom:80px;left:16px;
+  z-index:998;
+  display:flex;flex-direction:column;align-items:center;
+  width:120px;
+  cursor:pointer;
+}
+#shorshi-img{
+  width:120px;height:96px;
+  object-fit:contain;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,.5));
+  animation:shorshi-float 3s ease-in-out infinite;
+  transform-origin:bottom center;
+}
+@keyframes shorshi-float{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-8px) rotate(2deg)}
+}
+#shorshi-pointer{
+  font-size:1.4rem;
+  animation:shorshi-point 1.5s ease-in-out infinite;
+  transform-origin:top center;
+  margin-top:-4px;
+}
+@keyframes shorshi-point{
+  0%,100%{transform:translateY(0) rotate(-10deg)}
+  50%{transform:translateY(6px) rotate(10deg)}
+}
+#shorshi-bubble{
+  background:#fff;
+  color:#06091E;
+  font-family:'Rubik',sans-serif;
+  font-size:.78rem;
+  font-weight:700;
+  padding:8px 14px;
+  border-radius:16px 16px 16px 4px;
+  box-shadow:0 4px 16px rgba(0,0,0,.2);
+  white-space:nowrap;
+  position:relative;
+  margin-bottom:8px;
+  transition:opacity .4s,transform .4s;
+  direction:rtl;
+}
+#shorshi-bubble::after{
+  content:'';position:absolute;bottom:-7px;right:16px;
+  border:7px solid transparent;
+  border-top-color:#fff;
+  border-bottom:0;
+}
+.bubble-hidden{opacity:0;transform:translateY(6px);pointer-events:none}
+.bubble-show{opacity:1!important;transform:translateY(0)!important}
+@media(max-width:480px){
+  #shorshi-wrap{bottom:72px;left:8px;width:90px}
+  #shorshi-img{width:90px;height:72px}
+  #shorshi-bubble{font-size:.72rem;padding:6px 10px}
+}
+
 .wa-btn{
   width:60px;height:60px;border-radius:50%;
   background:linear-gradient(135deg,#25D366,#128C7E);
@@ -2843,6 +2901,15 @@ document.querySelectorAll('.why-card').forEach(card=>{
   </p>
 </div>
 
+<!-- SHORSHI CHARACTER -->
+<div id="shorshi-wrap">
+  <div id="shorshi-bubble" class="bubble-hidden">
+    <span id="shorshi-text">דברו איתי! 👋</span>
+  </div>
+  <img id="shorshi-img" src="/shorshi.png" alt="שורשי"/>
+  <div id="shorshi-pointer">👆</div>
+</div>
+
 <!-- WHATSAPP FLOAT -->
 <div class="wa-float">
   <div class="wa-tooltip">כתבו לי בוואטסאפ 💬</div>
@@ -2860,6 +2927,42 @@ function toggleFaq(btn) {
   document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
 }
+
+// ── Shorshi character ────────────────────────────────────────────────────────
+(function(){
+  const msgs = [
+    'דברו איתי! 👋',
+    'יש שאלות? אני כאן 😊',
+    'לחצו לוואטסאפ! 💬',
+    'שורשים — כאן בשבילכם 🌱',
+    'בואו נדבר! ⬇️',
+  ];
+  let idx = 0;
+  const bubble = document.getElementById('shorshi-bubble');
+  const txt = document.getElementById('shorshi-text');
+  const wrap = document.getElementById('shorshi-wrap');
+
+  function showBubble(){
+    txt.textContent = msgs[idx % msgs.length];
+    idx++;
+    bubble.classList.remove('bubble-hidden');
+    bubble.classList.add('bubble-show');
+    setTimeout(hideBubble, 3500);
+  }
+  function hideBubble(){
+    bubble.classList.remove('bubble-show');
+    bubble.classList.add('bubble-hidden');
+  }
+
+  // Show first bubble after 2s, then every 7s
+  setTimeout(showBubble, 2000);
+  setInterval(showBubble, 7000);
+
+  // Click opens WhatsApp
+  if(wrap) wrap.addEventListener('click', function(){
+    window.open('https://wa.me/972544864131?text=%D7%94%D7%99%D7%99%20%D7%9C%D7%99%D7%93%D7%95%D7%A8%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%90%D7%AA%20%D7%94%D7%90%D7%AA%D7%A8%20%D7%95%D7%90%D7%A9%D7%9C%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%95%D7%93','_blank');
+  });
+})();
 
 // ── Mobile menu ──────────────────────────────────────────────────────────────
 function openMobileMenu(){document.getElementById('mobileMenu').classList.add('open');document.body.style.overflow='hidden';}
