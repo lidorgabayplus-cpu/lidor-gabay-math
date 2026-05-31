@@ -852,16 +852,38 @@ footer{
 }
 /* ─── SHORSHI CHARACTER ─── */
 #shorshi-wrap{
-  position:fixed;bottom:88px;left:8px;
+  position:fixed;bottom:76px;left:0;
   z-index:998;
   display:flex;flex-direction:column;align-items:center;
-  width:130px;
+  width:140px;
   cursor:pointer;
   user-select:none;
 }
-#shorshi-canvas{
-  width:130px;height:180px;
+#shorshi-img{
+  width:130px;
+  height:auto;
   display:block;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.3));
+  animation:shorshi-float 3.5s ease-in-out infinite;
+  transform-origin:bottom center;
+}
+@keyframes shorshi-float{
+  0%,100%{transform:translateY(0) rotate(-1deg) scaleX(1)}
+  25%{transform:translateY(-7px) rotate(1deg) scaleX(1)}
+  50%{transform:translateY(-10px) rotate(0deg) scaleX(1)}
+  75%{transform:translateY(-5px) rotate(-1deg) scaleX(1)}
+}
+#shorshi-arm{
+  position:absolute;
+  bottom:30px;right:-18px;
+  font-size:1.6rem;
+  animation:shorshi-point 1.2s ease-in-out infinite;
+  transform-origin:left center;
+  filter:drop-shadow(1px 1px 2px rgba(0,0,0,.3));
+}
+@keyframes shorshi-point{
+  0%,100%{transform:rotate(-15deg) translateX(0)}
+  50%{transform:rotate(5deg) translateX(6px)}
 }
 #shorshi-bubble{
   background:#fff;
@@ -870,27 +892,26 @@ footer{
   font-size:.8rem;
   font-weight:700;
   padding:8px 14px;
-  border-radius:16px 16px 16px 4px;
-  box-shadow:0 4px 20px rgba(0,0,0,.25);
+  border-radius:14px 14px 14px 3px;
+  box-shadow:0 4px 20px rgba(0,0,0,.18);
   white-space:nowrap;
   position:relative;
-  margin-bottom:6px;
+  margin-bottom:4px;
   transition:opacity .5s,transform .5s;
   direction:rtl;
-  line-height:1.4;
 }
 #shorshi-bubble::after{
-  content:'';position:absolute;bottom:-8px;left:18px;
-  border:8px solid transparent;
+  content:'';position:absolute;bottom:-7px;left:16px;
+  border:7px solid transparent;
   border-top-color:#fff;
   border-bottom:0;
 }
 .bubble-hidden{opacity:0;transform:translateY(8px);pointer-events:none}
 .bubble-show{opacity:1!important;transform:translateY(0)!important}
 @media(max-width:480px){
-  #shorshi-wrap{bottom:80px;left:4px;width:110px}
-  #shorshi-canvas{width:110px;height:150px}
-  #shorshi-bubble{font-size:.75rem;padding:6px 10px}
+  #shorshi-wrap{bottom:68px;width:110px}
+  #shorshi-img{width:100px}
+  #shorshi-bubble{font-size:.73rem;padding:6px 10px}
 }
 
 .wa-btn{
@@ -2891,7 +2912,10 @@ document.querySelectorAll('.why-card').forEach(card=>{
   <div id="shorshi-bubble" class="bubble-hidden">
     <span id="shorshi-text">דברו איתי! 👋</span>
   </div>
-  <canvas id="shorshi-canvas"></canvas>
+  <div style="position:relative;display:inline-block">
+    <img id="shorshi-img" src="/shorshi.png" alt="שורשי"/>
+    <span id="shorshi-arm">👉</span>
+  </div>
 </div>
 
 <!-- WHATSAPP FLOAT -->
@@ -2912,10 +2936,9 @@ function toggleFaq(btn) {
   if (!isOpen) item.classList.add('open');
 }
 
-// ── Shorshi 3D character ─────────────────────────────────────────────────────
+// ── Shorshi character ────────────────────────────────────────────────────────
 (function(){
-  // Speech bubble logic
-  const msgs = ['דברו איתי! 👋','יש שאלות? 😊','לחצו לוואטסאפ! 💬','שורשים בשבילכם 🌱','בואו נדבר! ⬇️'];
+  const msgs = ['דברו איתי! 👋','יש שאלות? 😊','לחצו לוואטסאפ! 💬','שורשים בשבילכם 🌱','בואו נדבר! ➡️'];
   let msgIdx = 0;
   const bubble = document.getElementById('shorshi-bubble');
   const txt    = document.getElementById('shorshi-text');
@@ -2924,95 +2947,11 @@ function toggleFaq(btn) {
     txt.textContent = msgs[msgIdx++ % msgs.length];
     bubble.classList.remove('bubble-hidden');
     bubble.classList.add('bubble-show');
-    setTimeout(()=>{bubble.classList.remove('bubble-show');bubble.classList.add('bubble-hidden');}, 3500);
+    setTimeout(()=>{bubble.classList.remove('bubble-show');bubble.classList.add('bubble-hidden');},3500);
   }
   setTimeout(showBubble, 1800);
   setInterval(showBubble, 7000);
   if(wrap) wrap.addEventListener('click',()=>window.open('https://wa.me/972544864131?text=%D7%94%D7%99%D7%99%20%D7%9C%D7%99%D7%93%D7%95%D7%A8%2C%20%D7%A8%D7%90%D7%99%D7%AA%D7%99%20%D7%90%D7%AA%20%D7%94%D7%90%D7%AA%D7%A8','_blank'));
-
-  // Three.js 3D render
-  const canvas = document.getElementById('shorshi-canvas');
-  if(!canvas) return;
-  const W=130, H=180;
-  canvas.width=W*2; canvas.height=H*2; // retina
-
-  // Load Three.js + GLTFLoader dynamically
-  function loadScript(src,cb){var s=document.createElement('script');s.src=src;s.onload=cb;document.head.appendChild(s);}
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', function(){
-    loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js', function(){
-      const THREE = window.THREE;
-      const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
-      renderer.setSize(W*2, H*2, false);
-      renderer.setPixelRatio(1);
-      renderer.outputEncoding = THREE.sRGBEncoding;
-      renderer.shadowMap.enabled = false;
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(45, W/H, 0.01, 100);
-      camera.position.set(0, 1.2, 3.2);
-      camera.lookAt(0, 0.8, 0);
-
-      // Lighting
-      const amb = new THREE.AmbientLight(0xffffff, 1.2);
-      scene.add(amb);
-      const dir = new THREE.DirectionalLight(0xffffff, 1.5);
-      dir.position.set(2, 4, 3);
-      scene.add(dir);
-      const fill = new THREE.DirectionalLight(0x6baaff, 0.6);
-      fill.position.set(-2, 1, -1);
-      scene.add(fill);
-
-      const loader = new THREE.GLTFLoader();
-      loader.load('/shorshi.glb', function(gltf){
-        const model = gltf.scene;
-        // Center model
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        model.position.sub(center);
-        model.position.y += size.y * 0.5;
-        scene.add(model);
-
-        // Find arm nodes for pointing animation
-        let arm1=null, arm2=null;
-        model.traverse(c=>{
-          if(c.name==='black_hoodie_arm_1') arm1=c;
-          if(c.name==='black_hoodie_arm_2') arm2=c;
-        });
-
-        // Store original rotations
-        const arm1Orig = arm1 ? arm1.rotation.clone() : null;
-        const arm2Orig = arm2 ? arm2.rotation.clone() : null;
-
-        let t=0;
-        function animate(){
-          requestAnimationFrame(animate);
-          t += 0.02;
-          // Body float
-          model.position.y = size.y*0.5 + Math.sin(t)*0.04;
-          model.rotation.y = Math.sin(t*0.5)*0.15;
-          // Arm pointing down-right (toward WA button)
-          if(arm1){
-            arm1.rotation.z = (arm1Orig ? arm1Orig.z : 0) - 0.8 + Math.sin(t*1.5)*0.15;
-            arm1.rotation.x = (arm1Orig ? arm1Orig.x : 0) + 0.3;
-          }
-          if(arm2){
-            arm2.rotation.z = (arm2Orig ? arm2Orig.z : 0) + 0.2 + Math.sin(t*0.8)*0.08;
-          }
-          renderer.render(scene, camera);
-        }
-        animate();
-      }, undefined, function(err){
-        // Fallback: emoji character
-        console.warn('GLB load error:', err);
-        canvas.style.display='none';
-        const fallback = document.createElement('div');
-        fallback.style.cssText='font-size:4rem;text-align:center;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,212,100,.4))';
-        fallback.textContent='🌱';
-        wrap.insertBefore(fallback, bubble.nextSibling);
-      });
-    });
-  });
 })();
 
 // ── Mobile menu ──────────────────────────────────────────────────────────────
