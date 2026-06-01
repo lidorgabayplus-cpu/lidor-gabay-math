@@ -1454,8 +1454,30 @@ async function renderReports(){
   </div>`);
 }
 
-async function genReport(sid){
+async function genReport(sid, skipDialog=false){
   if(!sid){toast('בחר תלמיד','error');return;}
+  if(!S.data.students)await loadAll();
+  const D=S.data;
+  const s=D.students.find(x=>x.id===sid);if(!s)return;
+
+  // הורה/תלמיד — ישירות בלי dialog
+  if(skipDialog||S.profile?.role!=='admin'){doGenReport(sid,s.notes||'');return;}
+
+  // מנהל — שלב 1: בקש המלצת מנטור לפני הפקה
+  openModal(`
+  <div class="modal-h">המלצת מנטור לדוח — ${s.name} <button class="modal-close" onclick="closeModal()">×</button></div>
+  <p style="font-size:.85rem;color:var(--mid);margin-bottom:12px">הטקסט יופיע בדוח תחת "המלצת המנטור". ניתן להשאיר ריק לטקסט ברירת מחדל.</p>
+  <div class="fg">
+    <textarea id="mentorNote" rows="5" placeholder="לדוגמה: יובל מציג שיפור עקבי ומשקיע רבות. ממליץ להמשיך בקצב הזה..." style="width:100%;padding:10px;border:1.5px solid var(--brd);border-radius:10px;font-family:inherit;font-size:.88rem;resize:vertical">${s.notes||''}</textarea>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:12px">
+    <button class="btn btn-primary" style="flex:1" onclick="doGenReport('${sid}',document.getElementById('mentorNote').value)">📄 הפק דוח</button>
+    <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
+  </div>`);
+}
+
+async function doGenReport(sid, mentorNote){
+  closeModal();
   if(!S.data.students)await loadAll();
   const D=S.data;
   const s=D.students.find(x=>x.id===sid);if(!s)return;
@@ -1463,70 +1485,167 @@ async function genReport(sid){
   const att=D.attendance.filter(a=>a.student_id===sid);
   const pres=att.filter(a=>a.present);
   const rate=att.length?Math.round(pres.length/att.length*100):0;
-  const scores=att.filter(a=>a.score!=null).map(a=>{
-    const l=D.lessons.find(l=>l.id===a.lesson_id);
-    return{date:l?.lesson_date||'',score:a.score,topic:l?.topic||''};
-  }).sort((a,b)=>a.date>b.date?1:-1);
-  const avgSc=scores.length?Math.round(scores.reduce((a,b)=>a+b.score,0)/scores.length):null;
   const hwTotal=att.filter(a=>a.homework).length;
   const hw=att.filter(a=>a.homework_done).length;
+
+  // שיעורים החודש
+  const monthStr=today().substring(0,7);
+  const monthLessons=(g?D.lessons.filter(l=>l.group_id===g.id&&l.lesson_date?.startsWith(monthStr)):[]);
+  const monthDone=monthLessons.filter(l=>l.lesson_date<=today()).length;
+  const monthLeft=monthLessons.filter(l=>l.lesson_date>today()).length;
+
+  // נתוני גרף — נוכחות לפי שיעור (אחרון 12)
+  const attWithDate=att.map(a=>{
+    const l=D.lessons.find(x=>x.id===a.lesson_id);
+    return{...a,date:l?.lesson_date||'',topic:l?.topic||''};
+  }).filter(a=>a.date).sort((a,b)=>a.date>b.date?1:-1).slice(-12);
+
+  const chartLabels=JSON.stringify(attWithDate.map(a=>a.date.substring(5)));// MM-DD
+  const chartData=JSON.stringify(attWithDate.map(a=>a.present?1:0));
+  const chartTopics=JSON.stringify(attWithDate.map(a=>a.topic||'שיעור'));
 
   const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"/>
   <title>דוח התקדמות — ${s.name}</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Rubik',sans-serif;background:#fff;color:#12172E;padding:0}
+    body{font-family:'Rubik',sans-serif;background:#fff;color:#12172E}
     .page{max-width:800px;margin:0 auto;padding:40px}
-    .header{background:linear-gradient(135deg,#06091E,#0D1340);color:#fff;padding:40px;border-radius:16px;margin-bottom:32px;position:relative;overflow:hidden}
-    .header::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:20px 20px}
-    .logo{font-size:2rem;font-weight:900;color:#fff;letter-spacing:-1px;position:relative}
-    .logo span{color:#00D4E8}
-    .student-name{font-size:1.6rem;font-weight:900;margin-top:16px;position:relative}
-    .meta{font-size:.85rem;color:rgba(255,255,255,.5);margin-top:8px;position:relative}
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
-    .kpi{background:#F4F6FF;border-radius:12px;padding:20px;text-align:center}
-    .kpi-val{font-size:2rem;font-weight:900;color:#3A5BF0}
-    .kpi-lbl{font-size:.72rem;color:#8890B5;margin-top:4px}
-    h2{font-size:1.1rem;font-weight:700;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #eee}
-    table{width:100%;border-collapse:collapse;margin-bottom:28px}
-    th{padding:10px;text-align:right;font-size:.75rem;color:#8890B5;border-bottom:1px solid #eee}
-    td{padding:10px;font-size:.85rem;border-bottom:1px solid #f5f5f5}
-    .badge-g{background:rgba(46,204,113,.1);color:#27ae60;padding:2px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
-    .badge-r{background:rgba(255,77,109,.1);color:#FF4D6D;padding:2px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
-    .footer{margin-top:40px;padding-top:20px;border-top:1px solid #eee;text-align:center;color:#8890B5;font-size:.78rem}
-    .charter{background:#F4F6FF;border-radius:12px;padding:24px;margin-bottom:28px}
-    .charter h3{font-size:.95rem;font-weight:700;margin-bottom:12px}
-    .charter p{font-size:.82rem;color:#4A5178;line-height:1.7}
-    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    /* HEADER */
+    .header{background:linear-gradient(135deg,#06091E 0%,#0D1340 60%,#1a2060 100%);color:#fff;padding:36px 40px;border-radius:20px;margin-bottom:28px;position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center}
+    .header::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:22px 22px;pointer-events:none}
+    .header-left{position:relative}
+    .logo-wrap{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .logo-text{font-size:1.6rem;font-weight:900;color:#fff;letter-spacing:-1px}
+    .logo-text span{color:#00D4E8}
+    .logo-sub{font-size:.72rem;font-weight:600;color:rgba(255,255,255,.4);letter-spacing:.15em;text-transform:uppercase}
+    .student-name{font-size:1.8rem;font-weight:900;line-height:1.1;margin-bottom:6px}
+    .meta{font-size:.82rem;color:rgba(255,255,255,.5)}
+    .meta strong{color:rgba(255,255,255,.8)}
+    .shorshi-img{height:120px;object-fit:contain;position:relative;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4))}
+    /* KPIs */
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+    .kpi{background:#F4F6FF;border-radius:14px;padding:20px 16px;text-align:center}
+    .kpi-val{font-size:2rem;font-weight:900;color:#3A5BF0;line-height:1}
+    .kpi-lbl{font-size:.7rem;color:#8890B5;margin-top:6px;font-weight:600;letter-spacing:.05em}
+    .kpi.green .kpi-val{color:#2ECC71}
+    .kpi.orange .kpi-val{color:#FF9A3C}
+    /* SECTIONS */
+    h2{font-size:1rem;font-weight:700;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #F0F1F8;color:#12172E}
+    .section{margin-bottom:28px}
+    /* CHART */
+    .chart-box{background:#F4F6FF;border-radius:14px;padding:20px;height:200px;position:relative}
+    /* MENTOR */
+    .mentor{background:linear-gradient(135deg,#F4F6FF,#EEF0FF);border-radius:14px;padding:24px;margin-bottom:28px;border-right:4px solid #3A5BF0}
+    .mentor-label{font-size:.72rem;font-weight:700;color:#3A5BF0;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+    .mentor p{font-size:.88rem;color:#2A3060;line-height:1.8}
+    /* FOOTER */
+    .footer{margin-top:36px;padding-top:18px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;color:#9BA4C5;font-size:.75rem}
+    .footer-logo{font-weight:900;color:#12172E;font-size:.9rem}
+    .footer-logo span{color:#3A5BF0}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none}}
   </style></head><body>
   <div class="page">
+
+    <!-- HEADER -->
     <div class="header">
-      <div class="logo">שור<span>שים</span></div>
-      <div class="student-name">${s.name}</div>
-      <div class="meta">קבוצה: ${g?.name||'—'} · דוח הופק: ${new Date().toLocaleDateString('he-IL')}</div>
+      <div class="header-left">
+        <div class="logo-wrap">
+          <div>
+            <div class="logo-text">שור<span>שים</span></div>
+            <div class="logo-sub">מרכז למידה · קריית שמונה</div>
+          </div>
+        </div>
+        <div class="student-name">${s.name}</div>
+        <div class="meta">
+          קבוצה: <strong>${g?.name||'—'}</strong> &nbsp;·&nbsp;
+          כיתה: <strong>${s.grade||'—'}</strong> &nbsp;·&nbsp;
+          תאריך הפקה: <strong>${new Date().toLocaleDateString('he-IL')}</strong>
+        </div>
+      </div>
+      <img class="shorshi-img" src="https://lidor-gabay-math.vercel.app/shorshi.png" alt="שורשי" onerror="this.style.display='none'"/>
     </div>
+
+    <!-- KPIs -->
     <div class="kpis">
-      <div class="kpi"><div class="kpi-val">${rate}%</div><div class="kpi-lbl">נוכחות</div></div>
-      <div class="kpi"><div class="kpi-val">${avgSc??'—'}</div><div class="kpi-lbl">ציון ממוצע</div></div>
-      <div class="kpi"><div class="kpi-val">${pres.length}</div><div class="kpi-lbl">שיעורים</div></div>
-      <div class="kpi"><div class="kpi-val">${hwTotal?Math.round(hw/hwTotal*100)+'%':'—'}</div><div class="kpi-lbl">שיעורי בית</div></div>
+      <div class="kpi ${rate>=80?'green':rate>=60?'':''}">
+        <div class="kpi-val">${rate}%</div>
+        <div class="kpi-lbl">נוכחות כללית</div>
+      </div>
+      <div class="kpi ${hwTotal&&Math.round(hw/hwTotal*100)>=80?'green':''}">
+        <div class="kpi-val">${hwTotal?Math.round(hw/hwTotal*100)+'%':'—'}</div>
+        <div class="kpi-lbl">הגשת שיעורי בית</div>
+      </div>
+      <div class="kpi orange">
+        <div class="kpi-val">${monthDone}</div>
+        <div class="kpi-lbl">שיעורים החודש</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">${monthLeft}</div>
+        <div class="kpi-lbl">שיעורים נותרו</div>
+      </div>
     </div>
-    ${scores.length?`<h2>ציונים לאורך זמן</h2>
-    <table><thead><tr><th>תאריך</th><th>נושא</th><th>ציון</th></tr></thead><tbody>
-    ${scores.map(x=>`<tr><td>${fmt(x.date)}</td><td>${x.topic||'—'}</td><td><span class="${x.score>=75?'badge-g':'badge-r'}">${x.score}</span></td></tr>`).join('')}
-    </tbody></table>`:''}
-    <div class="charter">
-      <h3>⭐ המלצת המנטור</h3>
-      <p>${s.notes||'תלמיד מצוין המציג עקביות ומאמץ. ממשיך להתקדם בקצב טוב.'}</p>
+
+    <!-- ATTENDANCE CHART -->
+    ${attWithDate.length?`
+    <div class="section">
+      <h2>📊 נוכחות לאורך זמן (12 שיעורים אחרונים)</h2>
+      <div class="chart-box">
+        <canvas id="attChart"></canvas>
+      </div>
+    </div>`:''}
+
+    <!-- MENTOR -->
+    <div class="mentor">
+      <div class="mentor-label">⭐ המלצת המנטור</div>
+      <p>${mentorNote||'תלמיד מצוין המציג עקביות ומאמץ. ממשיך להתקדם בקצב טוב — כל הכבוד!'}</p>
     </div>
+
+    <!-- FOOTER -->
     <div class="footer">
-      <strong>שורשים</strong> — מרחב למידה וקהילה לבני נוער בקריית שמונה<br>
-      המסמך הופק אוטומטית על ידי מערכת שורשים · ${new Date().toLocaleDateString('he-IL')}
+      <div><div class="footer-logo">שור<span>שים</span></div>מרחב למידה לבני נוער</div>
+      <div>📱 054-486-4131 &nbsp;·&nbsp; דוח הופק: ${new Date().toLocaleDateString('he-IL')}</div>
     </div>
   </div>
-  <script>window.onload=()=>window.print()<\/script>
+
+  <script>
+  window.onload=()=>{
+    // Attendance chart
+    const canvas=document.getElementById('attChart');
+    if(canvas){
+      const labels=${chartLabels};
+      const data=${chartData};
+      const topics=${chartTopics};
+      new Chart(canvas,{
+        type:'bar',
+        data:{
+          labels,
+          datasets:[{
+            label:'נוכחות',
+            data,
+            backgroundColor:data.map(v=>v?'rgba(46,204,113,.8)':'rgba(255,77,109,.8)'),
+            borderRadius:6,
+            borderSkipped:false,
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{label:(c)=>c.raw?'✓ נוכח':'✗ נעדר',title:(c)=>topics[c[0].dataIndex]||c[0].label}}
+          },
+          scales:{
+            y:{display:false,min:0,max:1.2},
+            x:{grid:{display:false},ticks:{font:{size:10}}}
+          }
+        }
+      });
+    }
+    setTimeout(()=>window.print(),600);
+  };
+  <\/script>
   </body></html>`);
   win.document.close();
 }
@@ -2004,7 +2123,7 @@ async function genParentReport(sid){
     S.data.groups=S.data.groups||[];
     S.data.lessons=S.data.lessons||[];
   }
-  genReport(sid);
+  genReport(sid, true); // הורה — ללא dialog מנטור
 }
 
 // ══════════════════════════════════════
