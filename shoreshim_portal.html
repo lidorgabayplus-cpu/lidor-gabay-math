@@ -2037,4 +2037,48 @@ function renderStudentDashboard(){
   </div>`);
   const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1).slice(-10);
   setTimeout(()=>{
-    const ctx=document.getElementByI
+    const ctx=document.getElementById('stChart')?.getContext('2d');
+    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:4,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});}
+  },100);
+}
+
+function renderStudentSchedule(){
+  const D=S.data;const st=D.student;if(!st)return;
+  const upcoming=D.lessons.filter(l=>l.lesson_date>=today()).slice(0,10);
+  setPage('השיעורים שלי','');
+  setContent(`<div class="card"><div class="tbl-wrap"><table>
+    <thead><tr><th>תאריך</th><th>שעה</th><th>נושא</th></tr></thead>
+    <tbody>${upcoming.map(l=>`<tr><td>${fmt(l.lesson_date)}</td><td>${l.start_time||'—'}</td><td>${l.topic||'—'}</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--lgt);padding:32px">אין שיעורים קרובים</td></tr>'}</tbody>
+  </table></div></div>`);
+}
+
+function renderStudentProgress(){
+  const D=S.data;const st=D.student;if(!st)return;
+  const att=D.attendance||[];
+  const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1);
+  setPage('ההתקדמות שלי','');
+  setContent(`<div class="card"><div class="chart-wrap" style="height:300px"><canvas id="stProgChart"></canvas></div></div>`);
+  setTimeout(()=>{
+    const ctx=document.getElementById('stProgChart')?.getContext('2d');
+    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{label:'ציון',data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:5,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}}}});}
+  },100);
+}
+
+function renderStudentHomework(){
+  const D=S.data;const st=D.student;if(!st)return;
+  const att=(D.attendance||[]).filter(a=>a.homework);
+  setPage('שיעורי בית','');
+  setContent(`<div class="card">
+    ${att.slice().reverse().map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
+      return`<div class="hw-item">
+        <div class="hw-cb ${a.homework_done?'done':''}"></div>
+        <div style="flex:1"><div class="hw-text ${a.homework_done?'done':''}">${a.homework||'שיעורי בית'}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
+        <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'✓ הוגש':'ממתין'}</span>
+      </div>`;}).join('')||'<div class="empty"><div class="ei">📝</div><p>אין שיעורי בית</p></div>'}
+  </div>`);
+}
+
+init();
+</script>
+</body>
+</html>
