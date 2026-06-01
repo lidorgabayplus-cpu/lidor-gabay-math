@@ -1839,10 +1839,10 @@ async function createAccount(){
   });
   if(error){toast('שגיאה: '+error.message,'error');return;}
 
-  // Insert profile manually in case trigger is slow
+  // Admin upsert overrides the trigger's default 'student' role — allowed via profile_admin_all RLS policy
   if(data.user){
     const {error:perr}=await sb.from('profiles').upsert({id:data.user.id,full_name:name,role,email,avatar_color:rndColor()},{onConflict:'id'});
-    if(perr) console.warn('Profile upsert warning:',perr.message);
+    if(perr){toast('שגיאה בהגדרת תפקיד: '+perr.message,'error');console.warn(perr);}
   }
 
   closeModal();
@@ -1860,7 +1860,7 @@ function renderParentDashboard(){
     setContent(`<div class="empty"><div class="ei">👋</div><p>חשבונך עדיין לא שויך לילד. אנא פנה למנטור לידור לשיוך.</p></div>`);
     return;
   }
-  const child=D.children[0];
+  const child=getActiveChild();
   const g=D.groups?.find(x=>x.id===child.group_id);
   const att=D.attendance.filter(a=>a.student_id===child.id);
   const rate=att.length?Math.round(att.filter(a=>a.present).length/att.length*100):0;
@@ -1869,6 +1869,7 @@ function renderParentDashboard(){
 
   setPage(`שלום ${S.profile.full_name?.split(' ')[0]||''}!`,`מעקב התקדמות — ${child.name}`);
   setContent(`
+  ${childSelector()}
   <div class="parent-hero">
     <div style="font-size:.78rem;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.1em;margin-bottom:8px">תלמיד</div>
     <div class="parent-child-name">${child.name}</div>
@@ -1921,11 +1922,30 @@ function avgScoreArr(att){
   return sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):null;
 }
 
+// ─── MULTI-CHILD SUPPORT ───
+function getActiveChild(){
+  const D=S.data;
+  if(!D.children?.length) return null;
+  return D.children.find(c=>c.id===S.activeChildId)||D.children[0];
+}
+function setActiveChild(id){
+  S.activeChildId=id;
+  loadParentData().then(()=>renderParentDashboard());
+}
+function childSelector(){
+  const D=S.data;
+  if(!D.children||D.children.length<=1) return '';
+  const active=getActiveChild();
+  return `<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    ${D.children.map(c=>`<button onclick="setActiveChild('${c.id}')" class="btn btn-sm ${c.id===active?.id?'btn-primary':'btn-ghost'}">${c.name}</button>`).join('')}
+  </div>`;
+}
+
 function renderParentAttendance(){
-  const D=S.data;const child=D.children?.[0];if(!child)return;
+  const D=S.data;const child=getActiveChild();if(!child)return;
   const att=D.attendance.filter(a=>a.student_id===child.id);
   setPage('נוכחות',child.name);
-  setContent(`<div class="card">
+  setContent(`${childSelector()}<div class="card">
     <div class="tbl-wrap"><table>
       <thead><tr><th>תאריך</th><th>קבוצה</th><th>נושא</th><th>נוכחות</th><th>ציון</th><th>הערה</th></tr></thead>
       <tbody>
@@ -1942,11 +1962,11 @@ function renderParentAttendance(){
 }
 
 function renderParentProgress(){
-  const D=S.data;const child=D.children?.[0];if(!child)return;
+  const D=S.data;const child=getActiveChild();if(!child)return;
   const att=D.attendance.filter(a=>a.student_id===child.id);
   const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1);
   setPage('התקדמות',child.name);
-  setContent(`<div class="card"><div class="chart-wrap" style="height:300px"><canvas id="progChart"></canvas></div></div>`);
+  setContent(`${childSelector()}<div class="card"><div class="chart-wrap" style="height:300px"><canvas id="progChart"></canvas></div></div>`);
   setTimeout(()=>{
     const ctx=document.getElementById('progChart')?.getContext('2d');
     if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{label:'ציון',data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:5,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}}}});}
@@ -1954,10 +1974,10 @@ function renderParentProgress(){
 }
 
 function renderParentHomework(){
-  const D=S.data;const child=D.children?.[0];if(!child)return;
+  const D=S.data;const child=getActiveChild();if(!child)return;
   const att=D.attendance.filter(a=>a.student_id===child.id&&a.homework);
   setPage('שיעורי בית',child.name);
-  setContent(`<div class="card">
+  setContent(`${childSelector()}<div class="card">
     ${att.reverse().map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
       return`<div class="hw-item">
         <div class="hw-cb ${a.homework_done?'done':''}"></div>
@@ -1968,7 +1988,7 @@ function renderParentHomework(){
 }
 
 function renderParentReport(){
-  const D=S.data;const child=D.children?.[0];if(!child)return;
+  const D=S.data;const child=getActiveChild();if(!child)return;
   setPage('דוח התקדמות',child.name);
   setContent(`<div class="card" style="text-align:center;padding:48px">
     <div style="font-size:3rem;margin-bottom:16px">📄</div>
@@ -2017,15 +2037,4 @@ function renderStudentDashboard(){
   </div>`);
   const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1).slice(-10);
   setTimeout(()=>{
-    const ctx=document.getElementById('stChart')?.getContext('2d');
-    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:4,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});}
-  },100);
-}
-
-function renderStudentSchedule(){
-  const D=S.data;const st=D.student;if(!st)return;
-  const upcoming=D.lessons.filter(l=>l.lesson_date>=today()).slice(0,10);
-  setPage('השיעורים שלי','');
-  setContent(`<div class="card"><div class="tbl-wrap"><table>
-    <thead><tr><th>תאריך</th><th>שעה</th><th>נושא</th></tr></thead>
-    <tbody>${upcoming.map(l=>`<tr><td>${fmt(l.lesson_date)}</td><td>${l.start_time||'—'}</td><td>${l.topic||'—'}<
+    const ctx=document.getElementByI
