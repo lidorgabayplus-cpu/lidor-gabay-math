@@ -503,19 +503,7 @@ tr:hover td{background:var(--bg)}
         <label class="lf-label">סיסמה</label>
         <input class="lf-input" type="password" id="regPwd" placeholder="לפחות 8 תווים"/>
       </div>
-      <div class="lf-group">
-        <label class="lf-label">אני נרשם/ת כ:</label>
-        <div style="display:flex;gap:10px;margin-top:4px">
-          <label style="flex:1;cursor:pointer">
-            <input type="radio" name="regRole" value="parent" style="display:none" id="roleParent" checked/>
-            <div class="role-pill" id="pillParent" onclick="selectRole('parent')" style="text-align:center;padding:12px;border-radius:12px;border:2px solid var(--bl);color:var(--bl);font-weight:700;font-size:.9rem;transition:.2s;background:rgba(58,91,240,.12)">👨‍👩‍👧 הורה</div>
-          </label>
-          <label style="flex:1;cursor:pointer">
-            <input type="radio" name="regRole" value="student" style="display:none" id="roleStudent"/>
-            <div class="role-pill" id="pillStudent" onclick="selectRole('student')" style="text-align:center;padding:12px;border-radius:12px;border:2px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);font-weight:700;font-size:.9rem;transition:.2s">🧑‍🎓 תלמיד/ה</div>
-          </label>
-        </div>
-      </div>
+      <!-- role selection removed for security — all new users get 'student', admin assigns roles manually -->
       <button class="login-btn" onclick="doRegister()" id="regBtn">הרשמה →</button>
       <div class="login-err" id="regErr"></div>
     </div>
@@ -659,7 +647,7 @@ async function doRegister(){
   const name=document.getElementById('regName').value.trim();
   const em=document.getElementById('regEmail').value.trim();
   const pw=document.getElementById('regPwd').value;
-  const role=document.querySelector('input[name="regRole"]:checked')?.value||'student';
+  const role='student'; // security: all self-registrations are students, admin assigns roles
   const err=document.getElementById('regErr');
   const btn=document.getElementById('regBtn');
   if(!name||!em||!pw){err.textContent='יש למלא את כל השדות';return;}
@@ -671,7 +659,7 @@ async function doRegister(){
   });
   if(error){err.textContent=error.message==='User already registered'?'המייל כבר רשום במערכת':error.message;btn.textContent='הרשמה →';btn.disabled=false;return;}
   // Profile will be created by DB trigger — but upsert to be safe
-  await sb.from('profiles').upsert({id:data.user.id,full_name:name,role},{ onConflict:'id' });
+  await sb.from('profiles').upsert({id:data.user.id,full_name:name,role:'student'},{ onConflict:'id' });
   err.style.color='var(--gr)';
   err.textContent='✅ נרשמת בהצלחה! בדוק את המייל שלך לאישור, ואז התחבר.';
   btn.textContent='הרשמה →';btn.disabled=false;
@@ -1613,17 +1601,71 @@ function openResourceModal(){
   <div class="fg"><label>שם</label><input id="rName" placeholder="שם המשאב"/></div>
   <div class="fg"><label>תיאור</label><input id="rDesc" placeholder="תיאור קצר"/></div>
   <div class="fg"><label>קטגוריה</label><input id="rCat" value="כללי"/></div>
-  <div class="fg"><label>קישור לקובץ (URL)</label><input id="rUrl" placeholder="https://..."/></div>
+  <div class="fg">
+    <label>סוג קובץ</label>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button type="button" id="rTabUrl" onclick="switchResTab('url')"
+        style="flex:1;padding:8px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;background:var(--bl);color:#fff;border:none">🔗 קישור (URL)</button>
+      <button type="button" id="rTabFile" onclick="switchResTab('file')"
+        style="flex:1;padding:8px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;background:var(--bg);color:var(--mid);border:1.5px solid var(--brd)">📎 העלאת קובץ</button>
+    </div>
+    <div id="rPanelUrl"><input id="rUrl" placeholder="https://..."/></div>
+    <div id="rPanelFile" style="display:none">
+      <input type="file" id="rFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4,.zip"
+        style="width:100%;padding:10px;border:1.5px dashed var(--brd);border-radius:10px;cursor:pointer;font-size:.88rem"/>
+      <div id="rUploadStatus" style="font-size:.82rem;color:var(--mid);margin-top:6px;display:none"></div>
+    </div>
+  </div>
   <div style="display:flex;gap:10px;margin-top:8px">
     <button class="btn btn-primary" style="flex:1" onclick="saveResource()">שמור</button>
     <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
   </div>`);
 }
 
+function switchResTab(tab){
+  const isUrl = tab==='url';
+  document.getElementById('rPanelUrl').style.display = isUrl?'':'none';
+  document.getElementById('rPanelFile').style.display = isUrl?'none':'';
+  document.getElementById('rTabUrl').style.background = isUrl?'var(--bl)':'var(--bg)';
+  document.getElementById('rTabUrl').style.color = isUrl?'#fff':'var(--mid)';
+  document.getElementById('rTabUrl').style.border = isUrl?'none':'1.5px solid var(--brd)';
+  document.getElementById('rTabFile').style.background = !isUrl?'var(--bl)':'var(--bg)';
+  document.getElementById('rTabFile').style.color = !isUrl?'#fff':'var(--mid)';
+  document.getElementById('rTabFile').style.border = !isUrl?'none':'1.5px solid var(--brd)';
+}
+
 async function saveResource(){
-  const obj={name:document.getElementById('rName').value.trim(),description:document.getElementById('rDesc').value.trim(),category:document.getElementById('rCat').value.trim(),file_path:document.getElementById('rUrl').value.trim()};
-  if(!obj.name){toast('שם חובה','error');return;}
-  await sb.from('resources').insert(obj);
+  const name = document.getElementById('rName').value.trim();
+  const desc = document.getElementById('rDesc').value.trim();
+  const cat  = document.getElementById('rCat').value.trim();
+  if(!name){toast('שם חובה','error');return;}
+
+  const isFileTab = document.getElementById('rPanelFile').style.display !== 'none';
+  let filePath = '';
+  let fileType = '';
+
+  if(isFileTab){
+    const fileInput = document.getElementById('rFile');
+    const file = fileInput.files[0];
+    if(!file){toast('בחר קובץ','error');return;}
+    const status = document.getElementById('rUploadStatus');
+    status.style.display='';
+    status.textContent='⏳ מעלה קובץ...';
+    const ext = file.name.split('.').pop().toLowerCase();
+    fileType = ext;
+    const path = `resources/${Date.now()}_${file.name.replace(/\s/g,'_')}`;
+    const {data:up, error:upErr} = await sb.storage.from('shorashim-files').upload(path, file, {upsert:true});
+    if(upErr){status.textContent='❌ '+upErr.message;return;}
+    const {data:pub} = sb.storage.from('shorashim-files').getPublicUrl(path);
+    filePath = pub.publicUrl;
+    status.textContent='✓ הועלה בהצלחה';
+  } else {
+    filePath = document.getElementById('rUrl').value.trim();
+    const ext = filePath.split('.').pop().split('?')[0].toLowerCase();
+    fileType = ['pdf','doc','docx','ppt','pptx'].includes(ext)?ext:'link';
+  }
+
+  await sb.from('resources').insert({name, description:desc, category:cat, file_path:filePath, file_type:fileType});
   closeModal();toast('✓ משאב נשמר','success');await renderResources();
 }
 
@@ -1986,37 +2028,4 @@ function renderStudentSchedule(){
   setPage('השיעורים שלי','');
   setContent(`<div class="card"><div class="tbl-wrap"><table>
     <thead><tr><th>תאריך</th><th>שעה</th><th>נושא</th></tr></thead>
-    <tbody>${upcoming.map(l=>`<tr><td>${fmt(l.lesson_date)}</td><td>${l.start_time||'—'}</td><td>${l.topic||'—'}</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--lgt);padding:32px">אין שיעורים קרובים</td></tr>'}</tbody>
-  </table></div></div>`);
-}
-
-function renderStudentProgress(){
-  const D=S.data;const st=D.student;if(!st)return;
-  const att=D.attendance||[];
-  const scores=att.filter(a=>a.score!=null).map(a=>({score:a.score,date:D.lessons.find(l=>l.id===a.lesson_id)?.lesson_date})).sort((a,b)=>a.date>b.date?1:-1);
-  setPage('ההתקדמות שלי','');
-  setContent(`<div class="card"><div class="chart-wrap" style="height:300px"><canvas id="stProgChart"></canvas></div></div>`);
-  setTimeout(()=>{
-    const ctx=document.getElementById('stProgChart')?.getContext('2d');
-    if(ctx&&scores.length){new Chart(ctx,{type:'line',data:{labels:scores.map(x=>fmt(x.date)),datasets:[{label:'ציון',data:scores.map(x=>x.score),borderColor:'#3A5BF0',backgroundColor:'rgba(58,91,240,.1)',borderWidth:2,pointRadius:5,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}}}});}
-  },100);
-}
-
-function renderStudentHomework(){
-  const D=S.data;const st=D.student;if(!st)return;
-  const att=(D.attendance||[]).filter(a=>a.homework);
-  setPage('שיעורי בית','');
-  setContent(`<div class="card">
-    ${att.slice().reverse().map(a=>{const l=D.lessons.find(x=>x.id===a.lesson_id);
-      return`<div class="hw-item">
-        <div class="hw-cb ${a.homework_done?'done':''}"></div>
-        <div style="flex:1"><div class="hw-text ${a.homework_done?'done':''}">${a.homework||'שיעורי בית'}</div><div class="hw-date">${fmt(l?.lesson_date)}</div></div>
-        <span class="badge ${a.homework_done?'badge-green':'badge-orange'}">${a.homework_done?'✓ הוגש':'ממתין'}</span>
-      </div>`;}).join('')||'<div class="empty"><div class="ei">📝</div><p>אין שיעורי בית</p></div>'}
-  </div>`);
-}
-
-init();
-</script>
-</body>
-</html>
+    <tbody>${upcoming.map(l=>`<tr><td>${fmt(l.lesson_date)}</td><td>${l.start_time||'—'}</td><td>${l.topic||'—'}<
