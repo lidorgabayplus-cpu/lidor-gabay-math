@@ -1615,6 +1615,7 @@ footer{
   .why-card{padding:20px 14px}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -2725,7 +2726,12 @@ function pickScale(v){
   document.querySelectorAll('#scaleG .sc-btn').forEach((b,i)=>b.classList.toggle('sel',i<v))
 }
 
-// ── DATA STORAGE — saves every submission to localStorage ─────────
+// ── SUPABASE ───────────────────────────────────────────────────────
+const SB_URL = 'https://iuzghbbccmiucixoayfz.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1emdoYmJjY21pdWNpeG9heWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0ODkwNTAsImV4cCI6MjA2NDA2NTA1MH0.F5fU-D3He8MsGbRclvHh5oZ-nFigjX3fwpD9JDVjAbc';
+const sbLead = supabase.createClient(SB_URL, SB_KEY);
+
+// ── DATA STORAGE — saves to Supabase + localStorage backup ─────────
 const STORE_KEY = 'lidor_survey_responses'
 
 function getStored(){
@@ -2733,10 +2739,28 @@ function getStored(){
   catch(e){ return [] }
 }
 
-function saveResponse(resp){
-  const all=getStored()
-  all.push(resp)
-  localStorage.setItem(STORE_KEY,JSON.stringify(all))
+async function saveResponse(resp){
+  // שמור ב-localStorage כגיבוי
+  const all=getStored();
+  all.push(resp);
+  try{ localStorage.setItem(STORE_KEY,JSON.stringify(all)); }catch(e){}
+
+  // שמור ב-Supabase (ראשי)
+  try {
+    await sbLead.from('leads').insert({
+      name:       resp.name || null,
+      phone:      resp.phone || null,
+      city:       resp.city || null,
+      num_kids:   resp.num_kids || null,
+      difficulty: resp.difficulty || null,
+      budget:     resp.budget || null,
+      priorities: resp.priorities || null,
+      likelihood: resp.likelihood || null,
+      raw_data:   resp
+    });
+  } catch(e) {
+    console.warn('Supabase save failed:', e.message);
+  }
 }
 
 function collectFormData(){
@@ -2764,9 +2788,9 @@ function collectFormData(){
   }
 }
 
-function submitForm(){
+async function submitForm(){
   const resp = collectFormData()
-  saveResponse(resp)
+  await saveResponse(resp)
   document.getElementById('sBody').style.display='none'
   const ty=document.getElementById('tyScreen')
   ty.style.display='block'
@@ -2788,48 +2812,61 @@ document.addEventListener('keydown',e=>{
   }
 })
 
-function renderAdmin(){
-  const all=getStored()
+async function renderAdmin(){
   const panel=document.getElementById('adminPanel')
   if(!panel.classList.contains('open')) return
-
   const count=document.getElementById('adminCount')
   const tbody=document.getElementById('adminTbody')
-  count.textContent=all.length+' תגובות'
+  tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">טוען...</td></tr>'
 
-  if(!all.length){ tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">אין תגובות עדיין</td></tr>'; return }
+  // נסה לטעון מ-Supabase
+  let all=[]
+  try {
+    const {data,error}=await sbLead.from('leads').select('*').order('created_at',{ascending:false})
+    if(!error && data) all=data
+  } catch(e){}
 
-  tbody.innerHTML=all.slice().reverse().map((r,i)=>`
+  // גיבוי: אם Supabase נכשל, הצג מ-localStorage
+  if(!all.length) all=getStored().slice().reverse()
+
+  count.textContent=all.length+' פניות'
+  if(!all.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">אין פניות עדיין</td></tr>'
+    return
+  }
+
+  tbody.innerHTML=all.map(r=>`
     <tr>
-      <td>${r.timestamp}</td>
-      <td>${r.num_kids}</td>
-      <td>${r.difficulty}</td>
-      <td>${r.budget}</td>
-      <td style="font-size:.75rem">${r.priorities}</td>
-      <td>${r.likelihood}/10</td>
-      <td>${r.name||'—'}</td>
-      <td>${r.phone||'—'}</td>
+      <td style="font-size:.75rem">${r.created_at?new Date(r.created_at).toLocaleString('he-IL'):r.timestamp||'—'}</td>
+      <td>${r.num_kids||'—'}</td>
+      <td>${r.difficulty||'—'}</td>
+      <td>${r.budget||'—'}</td>
+      <td style="font-size:.72rem">${r.priorities||'—'}</td>
+      <td>${r.likelihood!=null?r.likelihood+'/10':'—'}</td>
+      <td><strong>${r.name||'—'}</strong></td>
+      <td style="direction:ltr">${r.phone||'—'}</td>
       <td>${r.city||'—'}</td>
     </tr>`).join('')
 }
 
-function exportCSV(){
-  const all=getStored()
+async function exportCSV(){
+  const {data,error}=await sbLead.from('leads').select('*').order('created_at',{ascending:false})
+  const all=(data&&!error)?data:getStored()
   if(!all.length){ alert('אין נתונים לייצוא'); return }
   const headers=['תאריך','ילדים','קושי','תקציב','עדיפויות','סיכוי','שם','טלפון','עיר']
   const rows=all.map(r=>[
-    r.timestamp,r.num_kids,r.difficulty,r.budget,
-    r.priorities,r.likelihood,r.name,r.phone,r.city
+    r.created_at?new Date(r.created_at).toLocaleString('he-IL'):(r.timestamp||''),
+    r.num_kids,r.difficulty,r.budget,r.priorities,r.likelihood,r.name,r.phone,r.city
   ])
   const csv='﻿'+[headers,...rows].map(row=>row.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n')
   const a=document.createElement('a')
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv)
-  a.download='lidor_survey_'+new Date().toISOString().slice(0,10)+'.csv'
+  a.download='shoreshim_leads_'+new Date().toISOString().slice(0,10)+'.csv'
   a.click()
 }
 
 function clearData(){
-  if(confirm('למחוק את כל הנתונים? פעולה זו לא ניתנת לביטול.')){
+  if(confirm('למחוק את כל הנתונים המקומיים? (הנתונים ב-Supabase נשמרים)')){
     localStorage.removeItem(STORE_KEY)
     renderAdmin()
   }
