@@ -723,6 +723,7 @@ function adminNav(){return`
   <div class="sb-item" onclick="go('subscriptions')" id="nav-subscriptions"><span class="icon">💳</span>מנויים</div>
   <div class="sb-item" onclick="go('resources')" id="nav-resources"><span class="icon">📁</span>משאבים</div>
   <div class="sb-item" onclick="go('accounts')" id="nav-accounts"><span class="icon">🔑</span>ניהול חשבונות</div>
+  <div class="sb-item" onclick="go('leads')" id="nav-leads"><span class="icon">📬</span>פניות מהאתר</div>
 `;}
 
 function parentNav(){return`
@@ -767,6 +768,7 @@ async function routeToPortal(view){
     else if(v==='subscriptions') await renderSubscriptions();
     else if(v==='resources') await renderResources();
     else if(v==='accounts') await renderAccounts();
+    else if(v==='leads') await renderLeads();
   } else if(role==='parent'){
     await loadParentData();
     if(v==='p-dashboard') renderParentDashboard();
@@ -1403,6 +1405,64 @@ async function delLesson(lid){
   await sb.from('attendance').delete().eq('lesson_id',lid);
   await sb.from('lessons').delete().eq('id',lid);
   closeModal();toast('שיעור נמחק');await renderSchedule();
+}
+</script>
+<script>
+// ══════════════════════════════════════
+//  ADMIN — LEADS (פניות מהאתר)
+// ══════════════════════════════════════
+async function renderLeads(){
+  setPage('פניות מהאתר','כל מי שמילא את הסקר באתר הנחיתה',
+    `<button class="btn btn-ghost" onclick="exportLeadsCSV()">⬇️ ייצוא CSV</button>`);
+  setContent('<div class="loading"><div class="spinner"></div><span>טוען פניות...</span></div>');
+
+  const {data:leads,error}=await sb.from('leads').select('*').order('created_at',{ascending:false});
+  if(error){setContent(`<div class="card"><p style="color:var(--rd)">שגיאה: ${error.message}</p></div>`);return;}
+
+  const diffLabel={
+    'yes-a-lot':'כן מאוד','yes-a-bit':'קצת','no':'לא ממש','na':'לא רלוונטי'
+  };
+
+  setContent(`
+  <div class="card" style="margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap">
+    <div class="kpi" style="flex:1;min-width:120px"><div class="kpi-icon">📬</div><div class="kpi-val">${leads.length}</div><div class="kpi-label">סה"כ פניות</div></div>
+    <div class="kpi" style="flex:1;min-width:120px"><div class="kpi-icon">📞</div><div class="kpi-val">${leads.filter(l=>l.phone).length}</div><div class="kpi-label">עם טלפון</div></div>
+    <div class="kpi" style="flex:1;min-width:120px"><div class="kpi-icon">📅</div><div class="kpi-val">${leads.filter(l=>l.created_at&&l.created_at.startsWith(today().substring(0,7))).length}</div><div class="kpi-label">החודש</div></div>
+  </div>
+
+  <div class="card">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>תאריך</th><th>שם</th><th>טלפון</th><th>עיר</th><th>ילדים</th><th>קושי</th><th>תקציב</th><th>סיכוי</th></tr></thead>
+      <tbody>
+      ${leads.length?leads.map(l=>`<tr>
+        <td style="font-size:.78rem">${new Date(l.created_at).toLocaleDateString('he-IL')}</td>
+        <td><strong>${l.name||'—'}</strong></td>
+        <td style="direction:ltr">${l.phone?`<a href="https://wa.me/972${l.phone.replace(/^0/,'').replace(/\D/,'')}" target="_blank" style="color:var(--gr)">📱 ${l.phone}</a>`:'—'}</td>
+        <td>${l.city||'—'}</td>
+        <td>${l.num_kids||'—'}</td>
+        <td>${diffLabel[l.difficulty]||l.difficulty||'—'}</td>
+        <td>${l.budget||'—'}</td>
+        <td>${l.likelihood!=null?`<span class="badge badge-blue">${l.likelihood}/10</span>`:'—'}</td>
+      </tr>`).join(''):'<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--lgt)">אין פניות עדיין</td></tr>'}
+      </tbody>
+    </table></div>
+  </div>`);
+}
+
+async function exportLeadsCSV(){
+  const {data:leads}=await sb.from('leads').select('*').order('created_at',{ascending:false});
+  if(!leads?.length){toast('אין פניות לייצוא','error');return;}
+  const headers=['תאריך','שם','טלפון','עיר','ילדים','קושי','תקציב','עדיפויות','סיכוי'];
+  const rows=leads.map(l=>[
+    new Date(l.created_at).toLocaleString('he-IL'),
+    l.name,l.phone,l.city,l.num_kids,l.difficulty,l.budget,l.priorities,l.likelihood
+  ]);
+  const csv='﻿'+[headers,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='leads_'+today()+'.csv';
+  a.click();
+  toast('✓ CSV יוצא','success');
 }
 </script>
 <script>
