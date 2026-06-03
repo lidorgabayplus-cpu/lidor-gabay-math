@@ -453,10 +453,9 @@ tr:hover td{background:var(--bg)}
   .content{padding:10px !important}
 }
 
-/* ── SHORSHI MOUSE TRACKER ── */
+/* shorshi + password toggle */
 .shorshi-wrap{position:relative;width:140px;height:140px;margin:0 auto 16px;cursor:default}
-.shorshi-body{width:140px;height:140px;object-fit:contain;display:block;filter:drop-shadow(0 8px 24px rgba(58,91,240,0.5));transition:transform .08s ease-out;will-change:transform}
-/* ── PASSWORD TOGGLE ── */
+.shorshi-body{width:140px;height:140px;object-fit:contain;display:block;filter:drop-shadow(0 8px 24px rgba(58,91,240,0.5));transition:transform .08s ease-out}
 .pwd-wrap{position:relative}
 .pwd-wrap .lf-input{padding-left:44px}
 .pwd-toggle{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:1.1rem;padding:4px;line-height:1;transition:color .2s}
@@ -657,8 +656,7 @@ function setLoginTab(t){
   document.getElementById('registerForm').style.display=t==='register'?'block':'none';
   document.getElementById('forgotForm').style.display=t==='forgot'?'block':'none';
   const titles={login:'כניסה לפורטל',register:'הרשמה לפורטל',forgot:'איפוס סיסמה'};
-  const el=document.getElementById('loginTitle');
-  if(el) el.textContent=titles[t]||'';
+  const el=document.getElementById('loginTitle');if(el)el.textContent=titles[t]||'';
 }
 
 function selectRole(role){
@@ -696,28 +694,8 @@ async function doRegister(){
 }
 
 
-// ── PASSWORD TOGGLE ──
-function togglePwd(id, btn){
-  const inp=document.getElementById(id);
-  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
-  else{inp.type='password';btn.textContent='👁';}
-}
-
-// ── SHORSHI MOUSE TRACKER ──
-function initShorshiTracker(){
-  const body=document.getElementById('shorshiBody');
-  if(!body) return;
-  document.addEventListener('mousemove', function(e){
-    const wrap=document.getElementById('shorshiWrap');
-    if(!wrap) return;
-    const rect=wrap.getBoundingClientRect();
-    const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
-    const dx=e.clientX-cx, dy=e.clientY-cy;
-    const angle=Math.atan2(dy,dx);
-    const dist=Math.min(Math.sqrt(dx*dx+dy*dy),400)/400;
-    body.style.transform='rotate('+Math.sin(angle)*dist*8+'deg) translateY('+(-Math.cos(angle)*dist*5)+'px)';
-  });
-}
+function togglePwd(id,btn){const inp=document.getElementById(id);if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}else{inp.type='password';btn.textContent='👁';}}
+function initShorshiTracker(){const body=document.getElementById('shorshiBody');if(!body)return;document.addEventListener('mousemove',function(e){const wrap=document.getElementById('shorshiWrap');if(!wrap)return;const rect=wrap.getBoundingClientRect();const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;const dx=e.clientX-cx,dy=e.clientY-cy;const dist=Math.min(Math.sqrt(dx*dx+dy*dy),400)/400;body.style.transform='rotate('+(Math.sin(Math.atan2(dy,dx))*dist*8)+'deg) translateY('+(-Math.cos(Math.atan2(dy,dx))*dist*5)+'px)';});}
 
 async function doLogin(){
   const em=document.getElementById('loginEmail').value.trim();
