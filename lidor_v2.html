@@ -2747,19 +2747,29 @@ async function saveResponse(resp){
 
   // שמור ב-Supabase (ראשי)
   try {
-    const {data, error} = await sbLead.from('leads').insert({
-      name:       resp.name || null,
-      phone:      resp.phone || null,
-      city:       resp.city || null,
-      num_kids:   resp.num_kids || null,
-      difficulty: resp.difficulty || null,
-      budget:     resp.budget || null,
-      priorities: resp.priorities || null,
-      likelihood: typeof resp.likelihood === 'number' ? resp.likelihood : null,
-      raw_data:   resp
+    const r = await fetch(SB_URL + '/rest/v1/leads', {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        name:       resp.name || null,
+        phone:      resp.phone || null,
+        city:       resp.city || null,
+        num_kids:   resp.num_kids || null,
+        difficulty: resp.difficulty || null,
+        budget:     resp.budget || null,
+        priorities: resp.priorities || null,
+        likelihood: typeof resp.likelihood === 'number' ? resp.likelihood : null,
+        raw_data:   resp
+      })
     });
-    if(error){
-      console.error('Supabase insert error:', error.code, error.message, error.details);
+    if(!r.ok){
+      const errTxt = await r.text();
+      console.error('Supabase insert error:', r.status, errTxt);
     }
   } catch(e) {
     console.error('Supabase save exception:', e.message);
