@@ -2726,8 +2726,9 @@ function pickScale(v){
   document.querySelectorAll('#scaleG .sc-btn').forEach((b,i)=>b.classList.toggle('sel',i<v))
 }
 
-// ── DATA STORAGE — saves to localStorage + sends email via Formsubmit ──
+// ── DATA STORAGE — saves to Google Sheets + localStorage backup ──
 const STORE_KEY = 'lidor_survey_responses'
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxStLs4xMvLlh4llFoaT551sRFIOeeqBDeHFVUVDqccEfHjuIwNwcDx9_UecoQpM78QCw/exec'
 
 function getStored(){
   try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]') }
@@ -2735,32 +2736,30 @@ function getStored(){
 }
 
 async function saveResponse(resp){
-  // שמור ב-localStorage
+  // שמור ב-localStorage כגיבוי
   const all=getStored();
   all.push(resp);
   try{ localStorage.setItem(STORE_KEY,JSON.stringify(all)); }catch(e){}
 
-  // שלח מייל דרך Formsubmit (ללא הגדרות נוספות — אימות ראשוני נשלח למייל)
+  // שלח ל-Google Sheets
   try {
-    await fetch('https://formsubmit.co/ajax/lidorgabayplus@gmail.com', {
+    await fetch(SHEETS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        _subject: 'סקר שורשים — פניה חדשה' + (resp.name ? ' מ-' + resp.name : ''),
-        _captcha: 'false',
-        תאריך:      resp.timestamp,
-        שם:         resp.name || '—',
-        טלפון:      resp.phone || '—',
-        עיר:        resp.city || '—',
-        ילדים:      resp.num_kids || '—',
-        קושי:       resp.difficulty || '—',
-        תקציב:      resp.budget || '—',
-        עדיפויות:   resp.priorities || '—',
-        סיכוי:      resp.likelihood + '/10'
+        name:       resp.name || '',
+        phone:      resp.phone || '',
+        city:       resp.city || '',
+        num_kids:   resp.num_kids || '',
+        difficulty: resp.difficulty || '',
+        budget:     resp.budget || '',
+        priorities: resp.priorities || '',
+        likelihood: resp.likelihood || ''
       })
     });
   } catch(e) {
-    console.warn('Formsubmit error:', e.message);
+    console.warn('Sheets error:', e.message);
   }
 }
 
