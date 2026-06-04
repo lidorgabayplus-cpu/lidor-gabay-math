@@ -646,6 +646,8 @@ function toast(msg,type=''){
 }
 function openModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modal').style.display='flex';}
 function closeModal(){document.getElementById('modal').style.display='none';}
+function linkParent(){linkAcc(window._curId,"parent");}
+function linkStudent(){linkAcc(window._curId,"student");}
 function toggleMenu(){document.getElementById('sidebar').classList.toggle('open');}
 function fmt(d){if(!d)return'—';return new Date(d).toLocaleDateString('he-IL');}
 function today(){return new Date().toISOString().split('T')[0];}
@@ -1599,74 +1601,91 @@ document.addEventListener('click',e=>{
 
 // ══ STUDENT EDIT ══
 function openEditStudent(id){
+  window._curId=id;
   const st=S.data.students?.find(s=>s.id===id)||{};
   const grps=S.data.groups||[];
-  openModal('<div class="modal-title">✏️ עריכת תלמיד — '+st.name+'</div>'+
-  '<div class="form-grid">'+
-  '<div class="form-group"><label class="form-label">שם מלא</label><input class="form-input" id="es-name" value="'+( st.name||'')+'"/></div>'+
-  '<div class="form-group"><label class="form-label">כיתה</label><input class="form-input" id="es-grade" value="'+(st.grade||'')+'"/></div>'+
-  '<div class="form-group"><label class="form-label">טלפון הורה</label><input class="form-input" id="es-phone" dir="ltr" value="'+(st.phone||'')+'"/></div>'+
-  '<div class="form-group"><label class="form-label">קבוצה</label><select class="form-input" id="es-group"><option value="">ללא</option>'+grps.map(g=>'<option value="'+g.id+'"'+(st.group_id===g.id?' selected':'')+'>'+g.name+'</option>').join('')+'</select></div>'+
-  '</div>'+
-  '<div class="form-group" style="margin-top:12px"><label class="form-label">הערות</label><textarea class="form-input" id="es-notes" rows="2">'+(st.notes||'')+'</textarea></div>'+
-  '<div style="display:flex;gap:10px;margin-top:12px;align-items:center">'+
-  '<label style="font-size:.82rem;color:var(--text2);font-weight:600">סטטוס:</label>'+
-  '<button id="es-status-btn" onclick="toggleEstBtn()" class="btn btn-sm '+(st.active!==false?'btn-primary':'btn-ghost')+'" style="'+(st.active!==false?'':'color:var(--red);border-color:var(--red)')+'">'+
-  (st.active!==false?'✅ פעיל':'❌ מושהה')+'</button>'+
-  '<input type="hidden" id="es-active" value="'+(st.active!==false)+'" /></div>'+
-  '<div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">'+
-  '<button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="confirmDel(''+id+'')">🗑️ הסרה</button>'+
-  '<div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" onclick="closeModal()">ביטול</button>'+
-  '<button class="btn btn-primary btn-sm" onclick="saveEditSt(''+id+'')">💾 שמור</button></div></div>');
+  const sCls=st.active!==false?'btn-primary':'btn-ghost';
+  const sSty=st.active!==false?'':'color:var(--red);border-color:var(--red)';
+  const opts='<option value="">None</option>'+grps.map(g=>'<option value="'+g.id+'"'+(st.group_id===g.id?' selected':'')+'>'+g.name+'</option>').join('');
+  openModal([
+    '<div class="modal-title">Edit: '+st.name+'</div>',
+    '<div class="form-grid">',
+    '<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="es-name" value="'+(st.name||'')+'"/></div>',
+    '<div class="form-group"><label class="form-label">Grade</label><input class="form-input" id="es-grade" value="'+(st.grade||'')+'"/></div>',
+    '<div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="es-phone" dir="ltr" value="'+(st.phone||'')+'"/></div>',
+    '<div class="form-group"><label class="form-label">Group</label><select class="form-input" id="es-group">'+opts+'</select></div>',
+    '</div>',
+    '<div class="form-group" style="margin-top:12px"><label class="form-label">Notes</label><textarea class="form-input" id="es-notes" rows="2">'+(st.notes||'')+'</textarea></div>',
+    '<div style="display:flex;gap:10px;margin-top:12px;align-items:center">',
+    '<button id="es-status-btn" onclick="toggleEstBtn()" class="btn btn-sm '+sCls+'" style="'+sSty+'">'+(st.active!==false?'Active':'Inactive')+'</button>',
+    '<input type="hidden" id="es-active" value="'+(st.active!==false)+'" /></div>',
+    '<div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">',
+    '<button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="confirmDel(window._curId)">Delete</button>',
+    '<div style="display:flex;gap:8px">',
+    '<button class="btn btn-secondary btn-sm" onclick="closeModal()">Cancel</button>',
+    '<button class="btn btn-primary btn-sm" onclick="saveEditSt(window._curId)">Save</button>',
+    '</div></div>'
+  ].join(''));
 }
-function toggleEstBtn(){const a=document.getElementById('es-active');const v=a.value==='true';a.value=!v;const b=document.getElementById('es-status-btn');b.textContent=!v?'✅ פעיל':'❌ מושהה';b.className='btn btn-sm '+(!v?'btn-primary':'btn-ghost');b.style=!v?'':'color:var(--red);border-color:var(--red)';}
+function toggleEstBtn(){
+  const a=document.getElementById('es-active');const v=a.value==='true';a.value=!v;
+  const b=document.getElementById('es-status-btn');b.textContent=!v?'Active':'Inactive';
+  b.className='btn btn-sm '+(!v?'btn-primary':'btn-ghost');b.style=!v?'':'color:var(--red);border-color:var(--red)';
+}
 async function saveEditSt(id){
   const name=document.getElementById('es-name')?.value.trim();
-  if(!name){toast('שם חובה','error');return;}
-  const data={name,grade:document.getElementById('es-grade')?.value||'',phone:document.getElementById('es-phone')?.value||'',
-    group_id:document.getElementById('es-group')?.value||null,notes:document.getElementById('es-notes')?.value||'',
+  if(!name){toast('Name required','error');return;}
+  const data={name,grade:document.getElementById('es-grade')?.value||'',
+    phone:document.getElementById('es-phone')?.value||'',
+    group_id:document.getElementById('es-group')?.value||null,
+    notes:document.getElementById('es-notes')?.value||'',
     active:document.getElementById('es-active')?.value==='true'};
   const{error}=await sb.from('students').update(data).eq('id',id);
-  if(error){toast('שגיאה: '+error.message,'error');return;}
-  toast('✅ תלמיד עודכן','success');closeModal();await loadAdminData();
+  if(error){toast(error.message,'error');return;}
+  toast('Saved','success');closeModal();await loadAdminData();
   if(currentView==='student-profile')renderStudentProfile();else renderStudents();
 }
 async function confirmDel(id){
   const st=S.data.students?.find(s=>s.id===id);
-  if(!confirm('למחוק את '+(st?.name||'התלמיד')+'?'))return;
+  if(!confirm('Delete '+(st?.name||'')+'?'))return;
   await sb.from('student_sessions').delete().eq('student_id',id);
   await sb.from('student_growth').delete().eq('student_id',id);
   await sb.from('student_goals').delete().eq('student_id',id);
   const{error}=await sb.from('students').delete().eq('id',id);
-  if(error){toast('שגיאה: '+error.message,'error');return;}
-  toast('✅ תלמיד הוסר','success');closeModal();await loadAdminData();go('students');
+  if(error){toast(error.message,'error');return;}
+  toast('Deleted','success');closeModal();await loadAdminData();go('students');
 }
-
-// ══ ACCOUNT LINKING ══
 function openLinkAccountModal(id){
+  window._curId=id;
   const st=S.data.students?.find(s=>s.id===id)||{};
-  openModal('<div class="modal-title">🔗 שיוך חשבונות — '+st.name+'</div>'+
-  '<p style="font-size:.83rem;color:var(--text2);margin-bottom:20px">הזן מייל של הורה או תלמיד. לאחר שיירשמו עם מייל זה, יהיה להם גישה לנתונים של '+st.name+'.</p>'+
-  '<div class="form-group" style="margin-bottom:16px"><label class="form-label">📱 מייל הורה</label>'+
-  '<div style="display:flex;gap:8px"><input class="form-input" id="lnk-p" placeholder="parent@email.com" dir="ltr" style="flex:1"/>'+
-  '<button class="btn btn-primary btn-sm" onclick="linkAcc(''+id+'','parent')">קשר</button></div>'+
-  '<div style="font-size:.73rem;color:var(--text3);margin-top:4px">ההורה יוכל לראות נתוני הילד אחרי הרשמה עם מייל זה</div></div>'+
-  '<div class="form-group"><label class="form-label">🎒 מייל תלמיד</label>'+
-  '<div style="display:flex;gap:8px"><input class="form-input" id="lnk-s" placeholder="student@email.com" dir="ltr" style="flex:1"/>'+
-  '<button class="btn btn-secondary btn-sm" onclick="linkAcc(''+id+'','student')">קשר</button></div></div>'+
-  '<div id="lnk-res" style="margin-top:12px;font-size:.82rem;min-height:20px"></div>'+
-  '<div style="text-align:left;margin-top:16px"><button class="btn btn-ghost btn-sm" onclick="closeModal()">סגור</button></div>');
+  openModal([
+    '<div class="modal-title">Link Account: '+st.name+'</div>',
+    '<div class="form-group" style="margin-bottom:16px">',
+    '<label class="form-label">Parent Email</label>',
+    '<div style="display:flex;gap:8px"><input class="form-input" id="lnk-p" placeholder="parent@email.com" dir="ltr" style="flex:1"/>',
+    '<button class="btn btn-primary btn-sm" onclick="linkParent()">Link</button></div></div>',
+    '<div class="form-group">',
+    '<label class="form-label">Student Email</label>',
+    '<div style="display:flex;gap:8px"><input class="form-input" id="lnk-s" placeholder="student@email.com" dir="ltr" style="flex:1"/>',
+    '<button class="btn btn-secondary btn-sm" onclick="linkStudent()">Link</button></div></div>',
+    '<div id="lnk-res" style="margin-top:12px;font-size:.82rem"></div>',
+    '<div style="text-align:left;margin-top:16px"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button></div>'
+  ].join(''));
 }
 async function linkAcc(id,role){
   const email=document.getElementById(role==='parent'?'lnk-p':'lnk-s')?.value.trim();
   const res=document.getElementById('lnk-res');
-  if(!email){res.textContent='נא להזין מייל';res.style.color='var(--red)';return;}
+  if(!email){res.textContent='Enter email';res.style.color='var(--red)';return;}
   const field=role==='parent'?'parent_email_pending':'student_email_pending';
   const{error}=await sb.from('students').update({[field]:email}).eq('id',id);
-  if(error){res.textContent='שגיאה: '+error.message;res.style.color='var(--red)';return;}
-  res.style.color='var(--green)';
-  res.textContent='✅ '+email+' ישויך כ'+(role==='parent'?'הורה':'תלמיד')+' לאחר הרשמה.';
+  if(error){res.textContent=error.message;res.style.color='var(--red)';return;}
+  res.style.color='var(--green)';res.textContent='Linked: '+email;
 }
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open');}
+document.addEventListener('click',e=>{
+  const sidebar=document.getElementById('sidebar');
+  if(window.innerWidth<768&&sidebar.classList.contains('open')&&!sidebar.contains(e.target)&&!e.target.closest('.menu-btn'))sidebar.classList.remove('open');
+});
 
 // ── START ──
 init();
