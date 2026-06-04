@@ -1615,7 +1615,7 @@ footer{
   .why-card{padding:20px 14px}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 <body>
 
@@ -2726,12 +2726,7 @@ function pickScale(v){
   document.querySelectorAll('#scaleG .sc-btn').forEach((b,i)=>b.classList.toggle('sel',i<v))
 }
 
-// ── SUPABASE ───────────────────────────────────────────────────────
-const SB_URL = 'https://iuzghbbccmiucixoayfz.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1emdoYmJjY21pdWNpeG9heWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0ODkwNTAsImV4cCI6MjA2NDA2NTA1MH0.F5fU-D3He8MsGbRclvHh5oZ-nFigjX3fwpD9JDVjAbc';
-const sbLead = supabase.createClient(SB_URL, SB_KEY);
-
-// ── DATA STORAGE — saves to Supabase + localStorage backup ─────────
+// ── DATA STORAGE — saves to localStorage + sends email via Formsubmit ──
 const STORE_KEY = 'lidor_survey_responses'
 
 function getStored(){
@@ -2740,39 +2735,32 @@ function getStored(){
 }
 
 async function saveResponse(resp){
-  // שמור ב-localStorage כגיבוי
+  // שמור ב-localStorage
   const all=getStored();
   all.push(resp);
   try{ localStorage.setItem(STORE_KEY,JSON.stringify(all)); }catch(e){}
 
-  // שמור ב-Supabase (ראשי)
+  // שלח מייל דרך Formsubmit (ללא הגדרות נוספות — אימות ראשוני נשלח למייל)
   try {
-    const r = await fetch(SB_URL + '/rest/v1/leads', {
+    await fetch('https://formsubmit.co/ajax/lidorgabayplus@gmail.com', {
       method: 'POST',
-      headers: {
-        'apikey': SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
-        name:       resp.name || null,
-        phone:      resp.phone || null,
-        city:       resp.city || null,
-        num_kids:   resp.num_kids || null,
-        difficulty: resp.difficulty || null,
-        budget:     resp.budget || null,
-        priorities: resp.priorities || null,
-        likelihood: typeof resp.likelihood === 'number' ? resp.likelihood : null,
-        raw_data:   resp
+        _subject: 'סקר שורשים — פניה חדשה' + (resp.name ? ' מ-' + resp.name : ''),
+        _captcha: 'false',
+        תאריך:      resp.timestamp,
+        שם:         resp.name || '—',
+        טלפון:      resp.phone || '—',
+        עיר:        resp.city || '—',
+        ילדים:      resp.num_kids || '—',
+        קושי:       resp.difficulty || '—',
+        תקציב:      resp.budget || '—',
+        עדיפויות:   resp.priorities || '—',
+        סיכוי:      resp.likelihood + '/10'
       })
     });
-    if(!r.ok){
-      const errTxt = await r.text();
-      console.error('Supabase insert error:', r.status, errTxt);
-    }
   } catch(e) {
-    console.error('Supabase save exception:', e.message);
+    console.warn('Formsubmit error:', e.message);
   }
 }
 
@@ -2830,18 +2818,8 @@ async function renderAdmin(){
   if(!panel.classList.contains('open')) return
   const count=document.getElementById('adminCount')
   const tbody=document.getElementById('adminTbody')
-  tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">טוען...</td></tr>'
 
-  // נסה לטעון מ-Supabase
-  let all=[]
-  try {
-    const {data,error}=await sbLead.from('leads').select('*').order('created_at',{ascending:false})
-    if(!error && data) all=data
-  } catch(e){}
-
-  // גיבוי: אם Supabase נכשל, הצג מ-localStorage
-  if(!all.length) all=getStored().slice().reverse()
-
+  const all=getStored().slice().reverse()
   count.textContent=all.length+' פניות'
   if(!all.length){
     tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:#888">אין פניות עדיין</td></tr>'
@@ -2863,8 +2841,7 @@ async function renderAdmin(){
 }
 
 async function exportCSV(){
-  const {data,error}=await sbLead.from('leads').select('*').order('created_at',{ascending:false})
-  const all=(data&&!error)?data:getStored()
+  const all=getStored().slice().reverse()
   if(!all.length){ alert('אין נתונים לייצוא'); return }
   const headers=['תאריך','ילדים','קושי','תקציב','עדיפויות','סיכוי','שם','טלפון','עיר']
   const rows=all.map(r=>[
@@ -2879,7 +2856,7 @@ async function exportCSV(){
 }
 
 function clearData(){
-  if(confirm('למחוק את כל הנתונים המקומיים? (הנתונים ב-Supabase נשמרים)')){
+  if(confirm('למחוק את כל הנתונים המקומיים בדפדפן זה?')){
     localStorage.removeItem(STORE_KEY)
     renderAdmin()
   }
